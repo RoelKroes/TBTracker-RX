@@ -6,13 +6,7 @@
 * A TTGO T-Beam would be ideal. It has WiFi connectivity and a simple web interface
 * 
 * First adjust the settings in the settings file.
-* 
-* To compile you will need some libraries:
-* 
-* https://github.com/jgromes/RadioLib (Radiolib)
-* https://github.com/mikalhart/TinyGPSPlus (tinyGPS++)
-* 
-* 
+*  
 * Be sure you run the latest version of the Arduino IDE.
 ************************************************************************************/
 #include <RadioLib.h>
