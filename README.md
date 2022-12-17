@@ -1,12 +1,11 @@
 # TBTracker-RX
-LoRa High Altitude Balloon receiver for Arduino based on esp32 and sx1278 with support for a web interface and/or LCD display. 
+A cheap, mobile LoRa High Altitude Balloon receiver for Arduino based on esp32 and sx1278 with support for GPS, a web interface and a LCD display. 
 
 TBTracker-RX is a sketch for receiving LoRa transmissions from high altitude balloons. It will receive, decode and upload those transmissions.
 It is designed to upload telemetry data in the correct format to https://amateur.sondehub.org
 
-
 # Hardware needed
-The sketch is designed to compile in the Arduino IDE and work with a TTGO T-Beam board but it will work with seperate hardware modules as well.
+The sketch is designed to compile in the Arduino IDE and work with a TTGO T-Beam board but it will also work with seperate hardware modules.
 
 You will need at least:
 - esp32 based board
@@ -41,13 +40,13 @@ Some important settings:
 - LORA SETTINGS: Change the frequency and LoRa mode (currently I only tested mode 2)
 
 # Compile and run
-Compile, upload and run the sketch. Use the Serial Monitor to monitor the software. It will try to connect to one of your specified WiFi networks and show the IP-number it got. The IP-number will also show on the LCD display if you have one of those installed on your board. 
+Compile, upload and run the sketch. Use the Serial Monitor to monitor the software. It will try to connect to one of your specified WiFi networks and show the IP-number it got. The IP-number will also show on the LCD display (if you have one of those installed on your board). 
 
 # Using the web interface
-Just enter the ip-number in a browser and the web interface will show. From the web interface you can change the RX frequency and toggle the option to upload telemetry to Sondehub.
+Just enter the ip-number in a browser and the web interface will show. From the web interface you can change the RX frequency and toggle the option to upload telemetry to Sondehub. The main webpage will autoload every 20 seconds and will show you which direction you need to go if you want to chase your balloon.
 
-
-This software is a work in progress. Use at your own risk. Let me know if you find it useful or not and as always don't forget to have fun.
+# Work in progress
+This software is a work in progress. I made it to track my own balloons. Use it at your own risk, there are no guarantees. Let me know if you find it useful or not and as always don't forget to have fun.
 
 Roel.
 
