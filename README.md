@@ -19,6 +19,7 @@ Optional components:
 The sketch uses several libraries. Some will probably already be installed in your Arduino IDE but if not, follow the directions below:
 
 - ArduinoJson library (install from the library manager)
+- Adafruit_SSD1306 library (install from the library manager)
 - Adafruit_GFX library (install from the library manager)
 - Adafruit_BusIO library (install from the library manager)
 - Radiolib library (install from the library manager)
