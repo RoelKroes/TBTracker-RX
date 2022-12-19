@@ -32,6 +32,7 @@ Install the last two libraries from the IDE menu: Sketch -> Include Library -> A
 You will need to change the values in settings.h before you can use the sketch.
 Some important settings:
 
+- DEVFLAG: Set this to true if you want to test uploading to Sondehub but don't want to store the data in the Sondehub database. The telemetry will not appear on the map. You can still check the Serial Monitor to check the upload status of your data. Recommended for testing.
 - WiFi settings: You can add up to three wifi networks to the sketch. The software will automatically select the strongest network. Good choices are probalby your home network and the hotspot network from you mobile device.
 - CALLSIGN: Change your callsign. It will be shown on sondehub
 - UPL_LAT,UPL_LON,UPL_ALT: change these to your current location. It will be used when the software cannot get a valid GPS position
