@@ -40,7 +40,9 @@ Some important settings:
 - LORA SETTINGS: Change the frequency and LoRa mode (currently I only tested mode 2)
 
 # Compile and run
-Compile, upload and run the sketch. Use the Serial Monitor to monitor the software. It will try to connect to one of your specified WiFi networks and show the IP-number it got. The IP-number will also show on the LCD display (if you have one of those installed on your board). 
+>> Before you hit the compile button, be sure to select an ESP32 board in the Arduino IDE. Otherwise you will get compile errors! <<
+
+Compile, upload and run the sketch. Use the Serial Monitor to monitor the software. It will try to connect to one of your specified WiFi networks and show the IP-number it got from DHCP. The IP-number will also show on the LCD display (if you have one of those installed on your board). 
 
 # Using the web interface
 Just enter the ip-number in a browser and the web interface will show. From the web interface you can change the RX frequency and toggle the option to upload telemetry to Sondehub. The main webpage will autoload every 20 seconds and will show you which direction you need to go if you want to chase your balloon.
