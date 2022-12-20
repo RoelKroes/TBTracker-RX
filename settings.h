@@ -1,5 +1,3 @@
-// TBTracker-RX version number
-#define TBTRACKER_VERSION "V0.1ß"
 /***********************************************************************************
 * SETTINGS
 * 
