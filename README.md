@@ -51,7 +51,7 @@ Just enter the ip-number in a browser and the web interface will show. From the 
 
 # Versions
 v0.1ß:
-- 18-DEC-2022: Initial version, released in the Facebook HAN-NL group
+- 18-DEC-2022: Initial version, released in the Facebook HAB-NL group
 
 v0.0.1: 
 - 19-DEC-2022: Changed to x.y.z version numbering
