@@ -51,13 +51,13 @@ Just enter the ip-number in a browser and the web interface will show. From the 
 
 # Versions
 v0.1ß:
-18-DEC-2022: Initial version, released in the Facebook HAN-NL group
+- 18-DEC-2022: Initial version, released in the Facebook HAN-NL group
 
 v0.0.1: 
-19-DEC-2022: Changed to x.y.z version numbering
-19-DEC-2022: Moved version number to TBTracker-rx.ino from settings.h
-19-DEC-2022: The OLED display will now show frequency updates
-19-DEC-2022: Added a way to change the DEVFLAG in the webinterface 
+- 19-DEC-2022: Changed to x.y.z version numbering
+- 19-DEC-2022: Moved version number to TBTracker-rx.ino from settings.h
+- 19-DEC-2022: The OLED display will now show frequency updates
+- 19-DEC-2022: Added a way to change the DEVFLAG in the webinterface 
 
 # Work in progress
 This software is a work in progress. I made it to track my own balloons. Use it at your own risk, there are no guarantees. Let me know if you find it useful or not and as always don't forget to have fun.
