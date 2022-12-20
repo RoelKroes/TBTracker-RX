@@ -1,19 +1,30 @@
 /************************************************************************************
-* TBTracker-RX - version 0.1 - oktober 2022 - roel@kroes.com
+* TBTracker-RX - roel@kroes.com
 * 
 * A mobile software platform for receiving LoRa transmissions and uploading those 
 * to amateur.sondehub.org. The software is designed to run on the esp32 platform. 
 * A TTGO T-Beam would be ideal. It has WiFi connectivity and a simple web interface
 * 
 * First adjust the settings in the settings file.
-*  
+* 
 * Be sure you run the latest version of the Arduino IDE.
+*
+* v0.1ß:
+* 18-DEC-2022: Initial version, released in the Facebook HAN-NL group
+*
+* v0.0.1: 
+* 19-DEC-2022: Changed to x.y.z version numbering
+* 19-DEC-2022: Moved version number to TBTracker-rx.ino from settings.h
+* 19-DEV-2022: The OLED display will now show frequency updates
+* 19-DEC-2022: Added a way to change the DEVFLAG in the webinterface 
 ************************************************************************************/
 #include <RadioLib.h>
 #include <soc/soc.h>
 #include <soc/rtc_cntl_reg.h>
 #include "settings.h"
 
+// TBTracker-RX version number
+#define TBTRACKER_VERSION "V0.0.1"
 
 // Struct to hold LoRA settings
 struct TLoRaSettings
@@ -39,6 +50,9 @@ unsigned long timeCounter = 0;
 
 // counter for the number of valid packets we receive
 unsigned long packetCounter = 0;
+
+// Holder for the dev flag. If dev flag is true than data sent to Sondehub is not added to the database
+bool devflag;
 
 /************************************************************************************
 * Struct and variable which contains the latest telemetry
@@ -81,7 +95,12 @@ void setup()
 {
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); //disable brownout
   Serial.begin(57600);
-
+  
+  devflag = DEVFLAG;
+  if (devflag)
+  {
+     Serial.println("SOFTWARE IS IN DEVELOPMENY MODE, change DEVFLAG in settings.h");
+  }
   
 #if defined(USE_SSD1306)
   // Setup the SSD1306 display if there is any
@@ -92,6 +111,10 @@ void setup()
   updateTime();
   setupWebserver();
   timeCounter = millis();
+
+#if defined(USE_SSD1306)
+    updateOLEDforFrequency();
+#endif  
 
   // When there is no valid GPS postion, we will take the GPS coordinates from the settings file
   Telemetry.uploader_position[0] = UPL_LAT;

@@ -55,24 +55,18 @@ void setupWifi()
 #if defined(USE_SSD1306)
     displayOled(0,0,"Connecting to WiFi...");
 #endif
-    
-
     while (WiFiMulti.run() != WL_CONNECTED) 
     {
       delay(500);
       Serial.print(".");
     }
+
     Serial.println("");
     Serial.print("[WiFi} WiFi connected to: "); Serial.println(WiFi.SSID()); 
     Serial.print("[WiFi} IP address: "); Serial.println(WiFi.localIP());
-#if defined(USE_SSD1306)
-    displayClear();
-    displayOled(0,0,"IP: ");
-    displayOled(30,0,WiFi.localIP().toString().c_str());
-    displayOled(0,15,"Waiting for packets");
-    displayOled(0,30,String(LoRaSettings.Frequency,3).c_str());
-#endif    
 
+    WiFi.setAutoReconnect(true);
+    WiFi.persistent(true);
 }
 
 

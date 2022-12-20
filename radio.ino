@@ -214,6 +214,9 @@ bool changeFrequency(String newFrequency)
   newFrequency.toCharArray(char_array, str_len);
   LoRaSettings.Frequency = atof(char_array);
   setupLoRa();
+#if defined(USE_SSD1306)
+  updateOLEDforFrequency();
+#endif
   return true;
 }
 

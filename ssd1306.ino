@@ -92,4 +92,43 @@ void displayFlash()
   display.invertDisplay(false);
 }
 
+
+/************************************************************************************
+// Update the OLED with the correct frequency
+************************************************************************************/
+void updateOLEDforFrequency(void)
+{
+  // Clear the display
+  display.clearDisplay();
+  // Set the Text size
+  display.setTextSize(1);
+  // Set the text color
+  display.setTextColor(WHITE);
+  // Set the cursor
+  display.setCursor(0, 0);
+  
+  // Line 1
+  display.print("IP: "); display.println(WiFi.localIP().toString().c_str());
+  // Line 2
+  display.println(); 
+  // Line 3
+  display.println();   
+  // Line 4
+  display.println("Waiting for packets");
+  // Line 5
+  display.print("on: ");
+  display.print(String(LoRaSettings.Frequency,3).c_str());
+  display.println(" MHz");
+  // Line 6
+  display.println();
+  // Line 7
+  display.println();
+  // Invert the screen color
+  display.setTextColor(SSD1306_BLACK, SSD1306_WHITE); // Draw 'inverse' text
+  // Line 8
+  display.print("TBTacker-RX "); display.println(TBTRACKER_VERSION);
+  // Display everything
+  display.display();
+}
+
 #endif

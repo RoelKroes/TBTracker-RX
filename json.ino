@@ -128,7 +128,7 @@ void postDataToServer()
     // Add values in the document
     
     // Add the "dev" flag to the JSON if you only want to test the validity of the
-    if (DEVFLAG) doc["dev"] = "true";
+    if (devflag) doc["dev"] = "true";
     doc["software_name"] = "TBTracker-RX";
     doc["software_version"] = TBTRACKER_VERSION;
     doc["uploader_callsign"] = CALLSIGN;

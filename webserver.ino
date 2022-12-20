@@ -58,6 +58,10 @@ const char index_html[] PROGMEM = R"rawliteral(
     <td>Upload to <a href="https:amateur.sondehub.org/">Sondehub:</a></td><td>%SONDEHUB%</td>
     <td><form action="/get2"><input type="submit" value="toggle"></form></td>
     </tr>
+    <tr>
+    <td>I am only testing:</a></td><td>%DEVFLAG%</td>
+    <td><form action="/get3"><input type="submit" value="toggle"></form></td>
+    </tr>
   </tbody>
 </table>
  
@@ -107,6 +111,9 @@ String processor(const String& var)
     return "TBTRACKER-RX " + String(TBTRACKER_VERSION);
   else if (var == "FREQUENCY")
     return  String(LoRaSettings.Frequency,3);
+  else if (var == "DEVFLAG")
+    if (devflag) return String("Yes");
+    else return("No");
   else if (var == "CALLSIGN")
     return String(CALLSIGN);
   else if (var == "TELEMETRY")
@@ -172,6 +179,14 @@ void setupWebserver()
         request->send(200, "text/html", "Upload to Sondehub was changed.<br><a href=\"/\">Return to Home Page</a>");
     });
 
+    server.on("/get3", HTTP_GET, [](AsyncWebServerRequest *request)
+    {
+      if (devflag)
+        devflag = false;
+      else
+        devflag = true;
+        request->send(200, "text/html", "Development flag was changed.<br><a href=\"/\">Return to Home Page</a>");
+    });
 
     server.on("/get", HTTP_GET, [] (AsyncWebServerRequest *request) 
     {
