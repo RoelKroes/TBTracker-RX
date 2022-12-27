@@ -50,14 +50,20 @@ Compile, upload and run the sketch. Use the Serial Monitor to monitor the softwa
 Just enter the ip-number in a browser and the web interface will show. From the web interface you can change the RX frequency and toggle the option to upload telemetry to Sondehub. The main webpage will autoload every 20 seconds and will show you which direction you need to go if you want to chase your balloon.
 
 # Versions
-v0.1ß:
-- 18-DEC-2022: Initial version, released in the Facebook HAB-NL group
-
+v0.0.2:
+- 23-DEC-2022: Added upload result to the web interface
+- 23-DEC-2022: "comment" string is now disabled by default
+- 23-DEC-2022: Try to determine if the packet received is an actual HAB packet or an invalid or unknown packet
+- 23-DEC-2022: Changed the wording of "Test mode" in the webinterface
+ 
 v0.0.1: 
 - 19-DEC-2022: Changed to x.y.z version numbering
 - 19-DEC-2022: Moved version number to TBTracker-rx.ino from settings.h
 - 19-DEC-2022: The OLED display will now show frequency updates
 - 19-DEC-2022: Added a way to change the DEVFLAG in the webinterface 
+
+v0.1ß:
+- 18-DEC-2022: Initial version, released in the Facebook HAB-NL group
 
 # Work in progress
 This software is a work in progress. I made it to track my own balloons. Use it at your own risk, there are no guarantees. Let me know if you find it useful or not and as always don't forget to have fun.
