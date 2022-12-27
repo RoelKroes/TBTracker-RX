@@ -143,56 +143,64 @@ void receiveLoRa()
 
     if (state == RADIOLIB_ERR_NONE) 
     {
-      // packet was successfully received
+      // packet was successfully received, determine if it is a HAB packet by checking for "$$"
+      // as the first two characters of the LoRa packet the radio received.
+      if (Telemetry.raw.indexOf("$$") != 0)
+      {
+        // not a HAB package
+        Serial.println("Received a packet but it is not a HAB packet.");
+      }
+      else
+      {
+        // Get the time from the ESP, so we have a timestamp
+        formatLocalTime();
 
-      // Get the time from the ESP, so we have a timestamp
-      formatLocalTime();
+        // Process datapacket from the radio, print it to the serial port and store it in the telemetry struct
+        Serial.print(F("[RADIO] Received packet:\t"));
+        Serial.println(Telemetry.time_received);
 
-      // Process datapacket from the radio, print it to the serial port and store it in the telemetry struct
-      Serial.print(F("[SX1278] Received packet:\t"));
-      Serial.println(Telemetry.time_received);
+        // print data of the packet
+        Serial.print(F("[RADIO] Raw Data:\t\t"));
+        Serial.println(Telemetry.raw);
 
-      // print data of the packet
-      Serial.print(F("[SX1278] Raw Data:\t\t"));
-      Serial.println(Telemetry.raw);
+        // print RSSI (Received Signal Strength Indicator)
+        Serial.print(F("[RADIO] RSSI:\t\t\t"));
+        Telemetry.rssi = radio.getRSSI();
+        Serial.print(Telemetry.rssi);
+        Serial.println(F(" dBm"));
 
-      // print RSSI (Received Signal Strength Indicator)
-      Serial.print(F("[SX1278] RSSI:\t\t\t"));
-      Telemetry.rssi = radio.getRSSI();
-      Serial.print(Telemetry.rssi);
-      Serial.println(F(" dBm"));
+        // print SNR (Signal-to-Noise Ratio)
+        Serial.print(F("[RADIO] SNR:\t\t\t"));
+        Telemetry.snr = radio.getSNR();
+        Serial.print(Telemetry.snr);
+        Serial.println(F(" dB"));
 
-      // print SNR (Signal-to-Noise Ratio)
-      Serial.print(F("[SX1278] SNR:\t\t\t"));
-      Telemetry.snr = radio.getSNR();
-      Serial.print(Telemetry.snr);
-      Serial.println(F(" dB"));
-
-      // print frequency error
-      Serial.print(F("[SX1278] Frequency error:\t"));
-      Telemetry.frequency_error = radio.getFrequencyError();
-      Serial.print(Telemetry.frequency_error);
-      Serial.println(F(" Hz"));
-      Serial.println();
-      Telemetry.frequency = LoRaSettings.Frequency + (Telemetry.frequency_error / 1000000);
+        // print frequency error
+        Serial.print(F("[RADIO] Frequency error:\t"));
+        Telemetry.frequency_error = radio.getFrequencyError();
+        Serial.print(Telemetry.frequency_error);
+        Serial.println(F(" Hz"));
+        Serial.println();
+        Telemetry.frequency = LoRaSettings.Frequency + (Telemetry.frequency_error / 1000000);
       
-      // Parse the RAW payload data and post it to SondeHub
-      packetCounter++;
-      getMetafromRaw(Telemetry.raw);
-      parseRawData(Telemetry.raw);
-
+        // Parse the RAW payload data and post it to SondeHub
+        packetCounter++;
+        getMetafromRaw(Telemetry.raw);
+        parseRawData(Telemetry.raw);
+      }
     } 
     else if (state == RADIOLIB_ERR_CRC_MISMATCH) 
     {
       // packet was received, but is malformed
-      Serial.println(F("[SX1278] CRC error!"));
+      Serial.println(F("[RADIO] CRC error!"));
+      Telemetry.raw = "Invalid Packet - CRC Error";
     } 
     else 
     {
       // some other error occurred
-      Serial.print(F("[SX1278] Failed, code "));
+      Serial.print(F("[RADIO] Failed, code "));
       Serial.println(state);
-
+      Telemetry.raw = "Invalid Packet";
     }
 
     // put radio back to listen mode

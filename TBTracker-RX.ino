@@ -12,6 +12,12 @@
 * v0.1ß:
 * 18-DEC-2022: Initial version, released in the Facebook HAN-NL group
 *
+* v0.0.2
+* 23-DEC-2022: Added upload result to the web interface
+* 23-DEC-2022: "comment" string is now disabled by default
+* 23-DEC-2022: Try to determine if the packet received is an actual HAB packet or an invalid or unknown packet
+* 23-DEC-2022: Changed the wording of "Test mode" in the webinterface
+*
 * v0.0.1: 
 * 19-DEC-2022: Changed to x.y.z version numbering
 * 19-DEC-2022: Moved version number to TBTracker-rx.ino from settings.h
@@ -24,7 +30,7 @@
 #include "settings.h"
 
 // TBTracker-RX version number
-#define TBTRACKER_VERSION "V0.0.1"
+#define TBTRACKER_VERSION "V0.0.2"
 
 // Struct to hold LoRA settings
 struct TLoRaSettings
@@ -86,6 +92,7 @@ struct TTelemetry
   String lastField;             // Contains info about whatdata is in the fields after the location and altitude
   bool extraFields;             // is true when there are custom fields at the end of the payload data
   bool uploadSondehub;          // is true when the telemetry should be uploaded to Sondehub
+  String uploadResult;          // holds the latest upload result to Sondehub
 } Telemetry;
 
 /************************************************************************************
@@ -99,7 +106,7 @@ void setup()
   devflag = DEVFLAG;
   if (devflag)
   {
-     Serial.println("SOFTWARE IS IN DEVELOPMENY MODE, change DEVFLAG in settings.h");
+     Serial.println("SOFTWARE IS IN DEVELOPMENT MODE, change DEVFLAG in settings.h");
   }
   
 #if defined(USE_SSD1306)

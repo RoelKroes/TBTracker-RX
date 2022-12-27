@@ -59,7 +59,7 @@ const char index_html[] PROGMEM = R"rawliteral(
     <td><form action="/get2"><input type="submit" value="toggle"></form></td>
     </tr>
     <tr>
-    <td>I am only testing:</a></td><td>%DEVFLAG%</td>
+    <td>Test mode:</a></td><td>%DEVFLAG%</td>
     <td><form action="/get3"><input type="submit" value="toggle"></form></td>
     </tr>
   </tbody>
@@ -92,6 +92,9 @@ const char index_html[] PROGMEM = R"rawliteral(
     </tr>    
     <tr>
     <td>Bearing (degr.):</td><td>%BEARING% - travel <B>%COMPASS%</B> to chase</td>
+    </tr>    
+    <tr>
+    <td>Upload result:</td><td>%UPLOADRESULT%</td>
     </tr>    
   </tbody>
 </table>  
@@ -127,7 +130,12 @@ String processor(const String& var)
   else if (var == "DISTANCE")
     return String(Telemetry.distance,1);
   else if (var == "BEARING")
-    return String(Telemetry.bearing,0);    
+    return String(Telemetry.bearing,0);  
+  else if (var == "UPLOADRESULT")
+  {
+    if (Telemetry.uploadSondehub)
+      return Telemetry.uploadResult;
+  }
   else if (var == "COMPASS")
     return String(Telemetry.compass);        
   else if (var == "LOCATION")

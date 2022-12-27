@@ -185,13 +185,15 @@ void postDataToServer()
       String response = https.getString();                       
       Serial.print(httpResponseCode); Serial.print(" - ");
       Serial.println(response); 
+      Telemetry.uploadResult =  response;
     }
     else 
     { 
       Serial.printf("Error code: %d\n",httpResponseCode);
       Serial.printf("Error occurred while sending HTTP POST: %s\n", https.errorToString(httpResponseCode).c_str());  
+      Telemetry.uploadResult = https.errorToString(httpResponseCode);
     }
-
+    
     https.end();
   }
 }
