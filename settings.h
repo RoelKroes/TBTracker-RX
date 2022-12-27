@@ -44,7 +44,7 @@
 // Display the mobile flag (car icon) on the map
 #define I_AM_MOBILE false
 // Display a custom comment on sondehub. Just comment it out if you do not want a custom comment
-#define PAYLOAD_COMMENT "TBTracker-RX test"
+// #define PAYLOAD_COMMENT "TBTracker-RX test"
 // Latidude, longitude and altitude in meters of the uploader
 // Fill this in if you are not using a GPS
 #define UPL_LAT 52.0000
