@@ -50,6 +50,13 @@ Compile, upload and run the sketch. Use the Serial Monitor to monitor the softwa
 Just enter the ip-number in a browser and the web interface will show. From the web interface you can change the RX frequency and toggle the option to upload telemetry to Sondehub. The main webpage will autoload every 20 seconds and will show you which direction you need to go if you want to chase your balloon.
 
 # Versions
+v0.0.3
+- 06-01-2023: Added SNR, RSSI to the web interface
+- 06-01-2023: Added time since latest packet to the web interface
+- 06-01-2023: Made the Google Maps open in a new window
+- 06-01-2023: Solved several reported bugs / unexpected behaviour
+- 07-01-2023: changed some UI language. I apologize, English is not my native language
+
 v0.0.2:
 - 23-DEC-2022: Added upload result to the web interface
 - 23-DEC-2022: "comment" string is now disabled by default
