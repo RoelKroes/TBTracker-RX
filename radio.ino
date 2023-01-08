@@ -154,6 +154,7 @@ void receiveLoRa()
       {
         // Get the time from the ESP, so we have a timestamp
         formatLocalTime();
+        Telemetry.atmillis = millis();
 
         // Process datapacket from the radio, print it to the serial port and store it in the telemetry struct
         Serial.print(F("[RADIO] Received packet:\t"));

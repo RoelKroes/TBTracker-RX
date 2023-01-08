@@ -9,8 +9,11 @@
 * 
 * Be sure you run the latest version of the Arduino IDE.
 *
-* v0.1ß:
-* 18-DEC-2022: Initial version, released in the Facebook HAN-NL group
+* v0.0.3
+* 06-01-2023: Added SNR, RSSI to the web interface
+* 06-01-2023: Added time since latest packet to the web interface
+* 06-01-2023: Made the Google Maps open in a new window
+* 06-01-2023: Solved several reported bugs / unexpected behaviour
 *
 * v0.0.2
 * 23-DEC-2022: Added upload result to the web interface
@@ -23,6 +26,9 @@
 * 19-DEC-2022: Moved version number to TBTracker-rx.ino from settings.h
 * 19-DEV-2022: The OLED display will now show frequency updates
 * 19-DEC-2022: Added a way to change the DEVFLAG in the webinterface 
+*
+* v0.1ß:
+* 18-DEC-2022: Initial version, released in the Facebook HAB-NL group
 ************************************************************************************/
 #include <RadioLib.h>
 #include <soc/soc.h>
@@ -30,7 +36,7 @@
 #include "settings.h"
 
 // TBTracker-RX version number
-#define TBTRACKER_VERSION "V0.0.2"
+#define TBTRACKER_VERSION "V0.0.3"
 
 // Struct to hold LoRA settings
 struct TLoRaSettings
@@ -72,6 +78,7 @@ struct TTelemetry
   float frequency;              // Receiver Metadata - RX Frequency
   float frequency_error;        // Measured by Radio 
   String modulation;            // Modulation type
+  unsigned long atmillis=0;     // Reported millis when packet was received by the radio
   char time_received[30];       // Date/Time the packet was received on the network (example: "2022-04-18T04:36:59.899304Z")
   char datetime[30];            // Date/time reported by the payload itself. Use todays UTC date if no date available. (example: "2022-04-18T04:36:58.000000Z")
   String payload_callsign;      // Callsign of the payload

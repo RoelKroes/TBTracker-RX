@@ -69,7 +69,7 @@ void displayUpdate()
   display.print("Frequency: "); display.println(Telemetry.frequency,3);
   display.print(" Altitude: "); display.println(Telemetry.alt,0);
   display.print(" Distance: "); display.println(Telemetry.distance,1);
-  display.print("Direction: "); display.println(Telemetry.compass); 
+  display.print("    Chase: "); display.println(Telemetry.compass); 
   display.setTextColor(SSD1306_BLACK, SSD1306_WHITE); // Draw 'inverse' text
   display.print(packetCounter);
   display.print(" TBTacker-RX "); display.print(TBTRACKER_VERSION);

@@ -52,7 +52,7 @@ const char index_html[] PROGMEM = R"rawliteral(
     <td>Your callsign:</td><td>%CALLSIGN%</td><td>&nbsp;</td>
     </tr>
     <tr>
-    <td>Your location:</td><td><a href="https:www.google.com/maps/place/%LOCATION%">Google Maps</a></td><td>&nbsp;</td>
+    <td>Your location:</td><td><a href="https:www.google.com/maps/place/%LOCATION%" target="_blank">Google Maps</a></td><td>&nbsp;</td>
     </tr>
     <tr>
     <td>Upload to <a href="https:amateur.sondehub.org/">Sondehub:</a></td><td>%SONDEHUB%</td>
@@ -68,7 +68,7 @@ const char index_html[] PROGMEM = R"rawliteral(
 <table class="myTable" border="0" width="100%%" height="50">
   <tbody>
     <tr>
-      <th align="center">LATEST PACKET</th>
+      <th align="center">LATEST PACKET %TIMESINCE%</th>
     </tr>
   </tbody>
 </table>
@@ -76,16 +76,16 @@ const char index_html[] PROGMEM = R"rawliteral(
 <table class="myTable" border="0" width="100%%" height="50">
   <tbody>
     <tr>
+    <td>Payload ID:</td><td><B>%PAYLOADID%</B> (SNR: %SNR% dB, RSSI: %RSSI% dBm)</td>
+    </tr>
+    <tr>
     <td>Telemetry:</td><td style="white-space:nowrap">%TELEMETRY%</td>
     </tr>
     <tr>
-    <td>Payload ID:</td><td>%PAYLOADID%</td>
+    <td>Location:</td><td><a href="https:www.google.com/maps/place/%PAYLOADLOCATION%" target="_blank">Google Maps</a></td>
     </tr>
     <tr>
-    <td>Location:</td><td><a href="https:www.google.com/maps/place/%PAYLOADLOCATION%">Google Maps</a></td>
-    </tr>
-    <tr>
-    <td>Altitude:</td><td>%ALTITUDE%</td>
+    <td>Altitude:</td><td><B>%ALTITUDE%</B></td>
     </tr>
     <tr>
     <td>Distance (km):</td><td>%DISTANCE%</td>
@@ -131,6 +131,17 @@ String processor(const String& var)
     return String(Telemetry.distance,1);
   else if (var == "BEARING")
     return String(Telemetry.bearing,0);  
+  else if (var == "SNR")
+    return String(Telemetry.snr);
+  else if (var == "RSSI")
+    return String(Telemetry.rssi);
+  else if (var == "TIMESINCE")
+  {
+    if (Telemetry.atmillis > 0)
+      return getDuration(Telemetry.atmillis);
+    else
+     return ""; 
+  }
   else if (var == "UPLOADRESULT")
   {
     if (Telemetry.uploadSondehub)
