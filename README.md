@@ -51,11 +51,11 @@ Just enter the ip-number in a browser and the web interface will show. From the 
 
 # Versions
 v0.0.3:
-- 06-01-2023: Added SNR, RSSI to the web interface
-- 06-01-2023: Added time since latest packet to the web interface
-- 06-01-2023: Made the Google Maps links open in a new window
-- 06-01-2023: Solved several reported bugs / unexpected behaviour
-- 07-01-2023: Changed some UI language. (I apologize, English is not my native language)
+- 06-JAN-2023: Added SNR, RSSI to the web interface
+- 06-JAN-2023: Added time since latest packet to the web interface
+- 06-JAN-2023: Made the Google Maps links open in a new window
+- 06-JAN-2023: Solved several reported bugs / unexpected behaviour
+- 07-JAN-2023: Changed some UI language. (I apologize, English is not my native language)
 
 v0.0.2:
 - 23-DEC-2022: Added upload result to the web interface
