@@ -50,6 +50,15 @@ Compile, upload and run the sketch. Use the Serial Monitor to monitor the softwa
 Just enter the ip-number in a browser and the web interface will show. From the web interface you can change the RX frequency and toggle the option to upload telemetry to Sondehub. The main webpage will autoload every 20 seconds and will show you which direction you need to go if you want to chase your balloon.
 
 # Versions
+v0.0.4:
+- 14-JAN-2023: Added support for LoRa Mode 5 (Explicit mode, Error coding 4:8, Bandwidth 41.7kHz, SF 11, Low data rate optimize off)
+- 14-JAN-2023: Added support for LoRa Mode 3 (Explicit mode, Error coding 4:6, Bandwidth 250kHz,   SF 7, Low data rate optimize off)
+- 20-JAN-2023: Added support for LoRa Mode 0 (Explicit mode, Error coding 4:8, Bandwidth 20.8kHz, SF 11, Low data rate optimize on)
+- 20-JAN-2023: Added support for LoRa Mode 1 (Implicit mode, Error coding 4:5, Bandwidth 20.8kHz,  SF 6, Low data rate optimize off)
+- 20-JAN-2023: Added support for showing and changing the LoRa Mode in the webinterface
+- 20-JAN-2023: Solved several bugs
+- 20-JAN-2023: Added autotune to the radio (based on the frquency error calculated by the radio)
+
 v0.0.3:
 - 06-JAN-2023: Added SNR, RSSI to the web interface
 - 06-JAN-2023: Added time since latest packet to the web interface
