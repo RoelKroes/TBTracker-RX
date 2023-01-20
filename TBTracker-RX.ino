@@ -9,10 +9,19 @@
 * 
 * Be sure you run the latest version of the Arduino IDE.
 *
+* v0.0.4
+* 14-JAN-2023: Added support for LoRa Mode 5 (Explicit mode, Error coding 4:8, Bandwidth 41.7kHz, SF 11, Low data rate optimize off)
+* 14-JAN-2023: Added support for LoRa Mode 3 (Explicit mode, Error coding 4:6, Bandwidth 250kHz,   SF 7, Low data rate optimize off)
+* 20-JAN-2023: Added support for LoRa Mode 0 (Explicit mode, Error coding 4:8, Bandwidth 20.8kHz, SF 11, Low data rate optimize on)
+* 20-JAN-2023: Added support for LoRa Mode 1 (Implicit mode, Error coding 4:5, Bandwidth 20.8kHz,  SF 6, Low data rate optimize off)
+* 20-JAN-2023: Added support for showing and changing the LoRa Mode in the webinterface
+* 20-JAN-2023: Solved several bugs
+* 20-JAN-2023: Added autotune to the radio (based on the frquency error calculated by the radio)
+*
 * v0.0.3
 * 06-JAN-2023: Added SNR, RSSI to the web interface
 * 06-JAN-2023: Added time since latest packet to the web interface
-* 06-JAN-2023: Made the Google Maps links open in a new window
+* 06-JAN-2023: Made the Google Maps open in a new window
 * 06-JAN-2023: Solved several reported bugs / unexpected behaviour
 * 07-JAN-2023: Changed some UI language. (I apologize, English is not my native language)
 *
@@ -37,11 +46,12 @@
 #include "settings.h"
 
 // TBTracker-RX version number
-#define TBTRACKER_VERSION "V0.0.3"
+#define TBTRACKER_VERSION "V0.0.4"
 
 // Struct to hold LoRA settings
 struct TLoRaSettings
 {
+  uint8_t LoRaMode = LORA_MODE;
   float Frequency = LORA_FREQUENCY;
   float Bandwidth = LORA_BANDWIDTH;
   uint8_t SpreadFactor = LORA_SPREADFACTOR;
@@ -136,6 +146,12 @@ void setup()
   Telemetry.uploader_position[1] = UPL_LON;
   Telemetry.uploader_position[2] = UPL_ALT;
   
+  // Upload telemetry?
+  if (UPLOAD_PAYLOAD_PACKET)
+    Telemetry.uploadSondehub = true;
+  else
+    Telemetry.uploadSondehub = false;
+
 #if defined(USE_GPS)
   // Setup the GPS if there is any 
   Serial2.begin(GPS_BAUD, SERIAL_8N1, GPS_RX, GPS_TX);   

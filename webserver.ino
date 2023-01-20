@@ -49,6 +49,22 @@ const char index_html[] PROGMEM = R"rawliteral(
     <td><form action="/get"><input type="text" name="frequency"><input type="submit" value="change"></form></td> 
     </tr>
     <tr>
+    <td>LoRa Mode:</td><td>%LORAMODE%</td>
+    <td>
+    <form action="/get4">
+      <select id="modes" name="modes">
+        <option value="-1">&nbsp;</option>
+        <option value="0">Mode 0</option>
+        <option value="1">Mode 1</option>
+        <option value="2">Mode 2</option>
+        <option value="3">Mode 3</option>
+        <option value="5">Mode 5</option>
+      </select>
+      <input type="submit" value="change">
+    </form>
+    </td> 
+    </tr>    
+    <tr>
     <td>Your callsign:</td><td>%CALLSIGN%</td><td>&nbsp;</td>
     </tr>
     <tr>
@@ -135,6 +151,8 @@ String processor(const String& var)
     return String(Telemetry.snr);
   else if (var == "RSSI")
     return String(Telemetry.rssi);
+  else if (var == "LORAMODE")
+    return String(LoRaSettings.LoRaMode);
   else if (var == "TIMESINCE")
   {
     if (Telemetry.atmillis > 0)
@@ -205,6 +223,25 @@ void setupWebserver()
       else
         devflag = true;
         request->send(200, "text/html", "Development flag was changed.<br><a href=\"/\">Return to Home Page</a>");
+    });
+
+    server.on("/get4", HTTP_GET, [](AsyncWebServerRequest *request)
+    {
+        String lMode;
+        if (request->hasParam("modes"))
+        {
+          lMode = request->getParam("modes")->value();
+          if (changeLoRaMode(lMode.toInt()))
+          {
+            request->send(200, "text/html", "LoRa mode was changed.<br><a href=\"/\">Return to Home Page</a>");
+          }
+          else
+          {
+            request->send(200, "text/html", "LoRa mode was NOT changed.<br><a href=\"/\">Return to Home Page</a>");
+          }
+          
+        } 
+        request->send(200, "text/html", "LoRa mode was changed.<br><a href=\"/\">Return to Home Page</a>");
     });
 
     server.on("/get", HTTP_GET, [] (AsyncWebServerRequest *request) 

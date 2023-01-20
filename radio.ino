@@ -22,6 +22,7 @@ volatile bool enableInterrupt = true;
   ICACHE_RAM_ATTR
 #endif
 
+#define PACKETLEN 255
 
 /************************************************************************************
 * Setup the Radio
@@ -33,13 +34,13 @@ void setupLoRa()
   Serial.print(F("[LoRa] Initializing ... "));
 
   // First setup the mode
-  // 0 = (normal for telemetry)  Explicit mode, Error coding 4:8, Bandwidth 20.8kHz, SF 11, Low data rate optimize on - NOT IMPLEMENTED YET
-  // 1 = (normal for SSDV)       Implicit mode, Error coding 4:5, Bandwidth 20.8kHz,  SF 6, Low data rate optimize off - NOT IMPLEMENTED YET
+  // 0 = (normal for telemetry)      Explicit mode, Error coding 4:8, Bandwidth 20.8kHz, SF 11, Low data rate optimize on - NOT IMPLEMENTED YET
+  // 1 = (normal for SSDV)           Implicit mode, Error coding 4:5, Bandwidth 20.8kHz,  SF 6, Low data rate optimize off - NOT IMPLEMENTED YET
   
-  // 2 = (normal for repeater)   Explicit mode, Error coding 4:8, Bandwidth 62.5kHz,  SF 8, Low data rate optimize off - Should work correctly
-  // 3 = (normal for fast SSDV)  Explicit mode, Error coding 4:6, Bandwidth 250kHz,   SF 7, Low data rate optimize off - Should work correctly
-  
-  switch (LORA_MODE)
+  // 2 = (normal for repeater)       Explicit mode, Error coding 4:8, Bandwidth 62.5kHz,  SF 8, Low data rate optimize off - Should work correctly
+  // 3 = (normal for fast SSDV)      Explicit mode, Error coding 4:6, Bandwidth 250kHz,   SF 7, Low data rate optimize off - Should work correctly
+  // 5 = (normal for calling mode)   Explicit mode, Error coding 4:8, Bandwidth 41.7kHz, SF 11, Low data rate optimize off - Should work correctly
+  switch (LoRaSettings.LoRaMode)
   {
     case 0: 
       LoRaSettings.CodeRate = 8;
@@ -51,7 +52,7 @@ void setupLoRa()
       LoRaSettings.CodeRate = 5;
       LoRaSettings.Bandwidth = 20.8;      
       LoRaSettings.SpreadFactor = 6;      
-      break;   
+    break;   
     
     case 2:
       LoRaSettings.CodeRate = 8;
@@ -64,6 +65,12 @@ void setupLoRa()
       LoRaSettings.Bandwidth = 250;      
       LoRaSettings.SpreadFactor = 7;            
       break;   
+
+    case 5:
+      LoRaSettings.CodeRate = 8;
+      LoRaSettings.Bandwidth = 41.7;      
+      LoRaSettings.SpreadFactor = 11;            
+    break;   
   }
   
   int16_t state = radio.begin
@@ -81,11 +88,33 @@ void setupLoRa()
   // set the function that will be called
   // when a new packet is received
   radio.setDio0Action(setFlag);
-  // Add a CRC. some receiver networks like tinyGS use CRC
-  radio.setCRC(true);
+
+  // Add some extra radio parameters
+  switch (LoRaSettings.LoRaMode)
+  {
+   case 0:
+      radio.forceLDRO(true);
+   break; 
+   case 1:
+      radio.implicitHeader(PACKETLEN);
+      radio.setCRC(true);
+   break;  
+   default:
+      radio.explicitHeader();
+   break;
+  }
+
 
   // start listening for LoRa packets
-  state = radio.startReceive();
+  if (LoRaSettings.LoRaMode==1)
+  {
+    state = radio.startReceive(PACKETLEN);
+  }
+  else
+  {
+    state = radio.startReceive();
+  }
+  
   if (state == RADIOLIB_ERR_NONE) 
   {
     Serial.println(F("success!"));
@@ -98,12 +127,6 @@ void setupLoRa()
     Serial.println(state);
     while (true);
   }
-
-  // Upload telemetry?
-  if (UPLOAD_PAYLOAD_PACKET)
-    Telemetry.uploadSondehub = true;
-  else
-    Telemetry.uploadSondehub = false;
 }
 
 /************************************************************************************
@@ -127,7 +150,7 @@ void setFlag(void)
 ************************************************************************************/
 void receiveLoRa()
 {
-
+  
    // check if the flag is set
   if(receivedFlag) 
   {
@@ -139,50 +162,70 @@ void receiveLoRa()
     receivedFlag = false;
 
     // Read data from the radio
-    int state = radio.readData(Telemetry.raw);
-
+    int state;
+    switch(LoRaSettings.LoRaMode)
+    {
+       case 1: 
+          radio.readData(Telemetry.raw,PACKETLEN);
+      break;
+       default: radio.readData(Telemetry.raw); break;
+    }
+    
     if (state == RADIOLIB_ERR_NONE) 
     {
+
+      // @@@@@ DEBUG @@@@@@
+      //Serial.println("Received Line: ");
+      //for (int i = 0; i<PACKETLEN; i++)
+     // {
+     //   Serial.print(Telemetry.raw[i]); 
+     //   Serial.print(" ");
+     // }
+      Serial.println();
+
+      // Get the time from the ESP, so we have a timestamp
+      formatLocalTime();
+      Telemetry.atmillis = millis();
+
+      // Process datapacket from the radio, print it to the serial port and store it in the telemetry struct
+      Serial.print(F("[RADIO] Received packet:\t"));
+      Serial.println(Telemetry.time_received);
+     
+      // print RSSI (Received Signal Strength Indicator)
+       Serial.print(F("[RADIO] RSSI:\t\t\t"));
+       Telemetry.rssi = radio.getRSSI();
+       Serial.print(Telemetry.rssi);
+       Serial.println(F(" dBm"));
+
+      // print SNR (Signal-to-Noise Ratio)
+      Serial.print(F("[RADIO] SNR:\t\t\t"));
+      Telemetry.snr = radio.getSNR();
+      Serial.print(Telemetry.snr);
+      Serial.println(F(" dB"));
+
+      // print frequency error
+      Serial.print(F("[RADIO] Frequency error:\t"));
+      Telemetry.frequency_error = radio.getFrequencyError();
+      Serial.print(Telemetry.frequency_error);
+      Serial.println(F(" Hz (Radio will be retuned)"));
+      Serial.println();
+      LoRaSettings.Frequency = LoRaSettings.Frequency - (Telemetry.frequency_error / 1000000);
+      Telemetry.frequency = LoRaSettings.Frequency;
+
+
       // packet was successfully received, determine if it is a HAB packet by checking for "$$"
       // as the first two characters of the LoRa packet the radio received.
       if (Telemetry.raw.indexOf("$$") != 0)
       {
         // not a HAB package
-        Serial.println("Received a packet but it is not a HAB packet.");
+        Telemetry.raw = "Received a packet but it is not a HAB telemetry packet.";
+        Serial.println(Telemetry.raw);
       }
       else
       {
-        // Get the time from the ESP, so we have a timestamp
-        formatLocalTime();
-        Telemetry.atmillis = millis();
-
-        // Process datapacket from the radio, print it to the serial port and store it in the telemetry struct
-        Serial.print(F("[RADIO] Received packet:\t"));
-        Serial.println(Telemetry.time_received);
-
         // print data of the packet
         Serial.print(F("[RADIO] Raw Data:\t\t"));
         Serial.println(Telemetry.raw);
-
-        // print RSSI (Received Signal Strength Indicator)
-        Serial.print(F("[RADIO] RSSI:\t\t\t"));
-        Telemetry.rssi = radio.getRSSI();
-        Serial.print(Telemetry.rssi);
-        Serial.println(F(" dBm"));
-
-        // print SNR (Signal-to-Noise Ratio)
-        Serial.print(F("[RADIO] SNR:\t\t\t"));
-        Telemetry.snr = radio.getSNR();
-        Serial.print(Telemetry.snr);
-        Serial.println(F(" dB"));
-
-        // print frequency error
-        Serial.print(F("[RADIO] Frequency error:\t"));
-        Telemetry.frequency_error = radio.getFrequencyError();
-        Serial.print(Telemetry.frequency_error);
-        Serial.println(F(" Hz"));
-        Serial.println();
-        Telemetry.frequency = LoRaSettings.Frequency + (Telemetry.frequency_error / 1000000);
       
         // Parse the RAW payload data and post it to SondeHub
         packetCounter++;
@@ -204,9 +247,7 @@ void receiveLoRa()
       Telemetry.raw = "Invalid Packet";
     }
 
-    // put radio back to listen mode
-    radio.startReceive();
-
+    setupLoRa();
     // we're ready to receive more packets,
     // enable interrupt service routine
     enableInterrupt = true;
@@ -227,6 +268,23 @@ bool changeFrequency(String newFrequency)
   updateOLEDforFrequency();
 #endif
   return true;
+}
+
+/************************************************************************************
+* Change LoRa Mode
+************************************************************************************/
+bool changeLoRaMode(int newMode)
+{
+  if (newMode >= 0 && newMode != LoRaSettings.LoRaMode)
+  {
+      LoRaSettings.LoRaMode = newMode;
+      setupLoRa(); 
+      return true;
+  }
+  else
+  {
+     return false; 
+  }
 }
 
   
