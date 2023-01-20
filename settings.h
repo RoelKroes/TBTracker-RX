@@ -51,7 +51,7 @@
 #define UPL_LON 5.0000
 #define UPL_ALT 10
 // Set this to false if you don't want your postion uploaded to the sondenhub map
-#define UPLOAD_YOUR_POSITION false
+#define UPLOAD_YOUR_POSITION true
 // Set this to false if you don't want the packet you received from the payload to upload to Sondehub
 #define UPLOAD_PAYLOAD_PACKET false
 
@@ -111,17 +111,17 @@
 #define LORA_POWER 10                // in dBm between 2 and 17. 10 = 10mW (recommended), currently not used
 #define LORA_PREAMBLELENGTH 8
 #define LORA_GAIN 0
-#define LORA_MODULATION "LoRa Mode 2" // This string will be shown in Sondehub
 
 // HAB modes
-// 0 = (normal for telemetry)  Explicit mode, Error coding 4:8, Bandwidth 20.8kHz, SF 11, Low data rate optimize on  - NUT SUPPORTED YET
-// 1 = (normal for SSDV)       Implicit mode, Error coding 4:5, Bandwidth 20.8kHz,  SF 6, Low data rate optimize off  - NUT SUPPORTED YET
+// 0 = (normal for telemetry)  Explicit mode, Error coding 4:8, Bandwidth 20.8kHz, SF 11, Low data rate optimize on  - SUPPORTED
+// 1 = (normal for SSDV)       Implicit mode, Error coding 4:5, Bandwidth 20.8kHz,  SF 6, Low data rate optimize off  - SUPPORTED
 // 2 = (normal for repeater)   Explicit mode, Error coding 4:8, Bandwidth 62.5kHz,  SF 8, Low data rate optimize off  - SUPPORTED
-// 3 = (normal for fast SSDV)  Explicit mode, Error coding 4:6, Bandwidth 250kHz,   SF 7, Low data rate optimize off   - NUT SUPPORTED YET
-// 4 = Test mode not for normal use.   - NUT SUPPORTED YET
-// 5 = (normal for calling mode)   Explicit mode, Error coding 4:8, Bandwidth 41.7kHz, SF 11, Low data rate optimize off   - NUT SUPPORTED YET
+// 3 = (normal for fast SSDV)  Explicit mode, Error coding 4:6, Bandwidth 250kHz,   SF 7, Low data rate optimize off   - SUPPORTED
+// 4 = Test mode not for normal use.   - NOT SUPPORTED YET
+// 5 = (normal for calling mode)   Explicit mode, Error coding 4:8, Bandwidth 41.7kHz, SF 11, Low data rate optimize off   - SUPPORTED
 // Default tracker mode = 2
 #define LORA_MODE 2  // Mode 2 is usually used for simple telemetry data for pico balloons
+#define LORA_MODULATION "LoRa Mode 2" // This string will be shown in Sondehub
 
 /***********************************************************************************
 * TIME SETTINGS
