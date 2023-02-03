@@ -50,6 +50,20 @@ Compile, upload and run the sketch. Use the Serial Monitor to monitor the softwa
 Just enter the ip-number in a browser and the web interface will show. From the web interface you can change the RX frequency and toggle the option to upload telemetry to Sondehub. The main webpage will autoload every 20 seconds and will show you which direction you need to go if you want to chase your balloon.
 
 # Versions
+v0.0.7:
+- 03-02-2023: The link to Sondehub in the web interface now opens in a new window
+- 03-02-2023: Software now works also without WiFi (data on Serial output or OLED display)
+
+v0.0.6
+- 29-JAN-2023: Added a parser for the APRS packets to display on the Serial interface, webinterface and SSD1306 display
+
+v0.0.5
+- 21-JAN-2023: Print length of received packet in the Serial monitor
+- 21-JAN-2023: Check if the received packet is indeed a HAB telemetry packet
+- 21-JAN-2023: Removed the RAW telemetry string from the Serial monitor to avoid double info and unreadable characters
+- 21-JAN-2023: Added support for LoRa-APRS packets
+- 21-JAN-2023: Added a packet Log trail in the web interface
+
 v0.0.4:
 - 14-JAN-2023: Added support for LoRa Mode 5 (Explicit mode, Error coding 4:8, Bandwidth 41.7kHz, SF 11, Low data rate optimize off)
 - 14-JAN-2023: Added support for LoRa Mode 3 (Explicit mode, Error coding 4:6, Bandwidth 250kHz,   SF 7, Low data rate optimize off)
