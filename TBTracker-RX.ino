@@ -9,6 +9,20 @@
 * 
 * Be sure you run the latest version of the Arduino IDE.
 *
+* v0.0.7
+* 03-02-2023: The link to Sondehub in the web interface now opens in a new window
+* 03-02-2023: Software now works also without WiFi (data on Serial output or OLED display)
+*
+* v0.0.6
+* 29-JAN-2023: Added a parser for the APRS packets to display on the Serial interface, webinterface and SSD1306 display
+*
+* v0.0.5
+* 21-JAN-2023: Print length of received packet in the Serial monitor
+* 21-JAN-2023: Check if the received packet is indeed a HAB telemetry packet
+* 21-JAN-2023: Removed the RAW telemetry string from the Serial monitor to avoid double info and unreadable characters
+* 21-JAN-2023: Added support for LoRa-APRS packets
+* 21-JAN-2023: Added a packet Log trail in the web interface
+*  
 * v0.0.4
 * 14-JAN-2023: Added support for LoRa Mode 5 (Explicit mode, Error coding 4:8, Bandwidth 41.7kHz, SF 11, Low data rate optimize off)
 * 14-JAN-2023: Added support for LoRa Mode 3 (Explicit mode, Error coding 4:6, Bandwidth 250kHz,   SF 7, Low data rate optimize off)
@@ -46,7 +60,7 @@
 #include "settings.h"
 
 // TBTracker-RX version number
-#define TBTRACKER_VERSION "V0.0.4"
+#define TBTRACKER_VERSION "V0.0.7"
 
 // Struct to hold LoRA settings
 struct TLoRaSettings
@@ -71,10 +85,10 @@ bool uploader_position_sent = false;
 // Just a variable to calculate simple time difference
 unsigned long timeCounter = 0;
 
-// counter for the number of valid packets we receive
+// global counter for the number of valid packets we receive
 unsigned long packetCounter = 0;
 
-// Holder for the dev flag. If dev flag is true than data sent to Sondehub is not added to the database
+// Holder for the dev flag. If dev flag is true than data sent to Sondehub is not added to the database. Can be set in settings.h
 bool devflag;
 
 /************************************************************************************
@@ -87,16 +101,17 @@ struct TTelemetry
   float snr;                    // Receiver metadata - SNR
   float rssi;                   // Receiver metadata - RSSI
   float frequency;              // Receiver Metadata - RX Frequency
-  float frequency_error;        // Measured by Radio 
+  float frequency_error;        // Measured by Radio. Based on this value the radio will be retuned. 
+  size_t rxPacketLen=0;         // Length of received packet
   String modulation;            // Modulation type
   unsigned long atmillis=0;     // Reported millis when packet was received by the radio
   char time_received[30];       // Date/Time the packet was received on the network (example: "2022-04-18T04:36:59.899304Z")
   char datetime[30];            // Date/time reported by the payload itself. Use todays UTC date if no date available. (example: "2022-04-18T04:36:58.000000Z")
   String payload_callsign;      // Callsign of the payload
   long  frame;                  // Optional - Frame number as reported by the payload
-  float lat;                    // Position latitude reported by the payload
-  float lon;                    // Position longitude reported by the payload
-  float alt;                    // Altitude reported by the payload
+  float lat;                    // Position latitude as reported by the payload
+  float lon;                    // Position longitude as reported by the payload
+  float alt;                    // Altitude in meters as reported by the payload
   unsigned int sats;            // Number of satellites as reported by the payload
   float temp;                   // Measured temperature by the payload
   float batt;                   // Battery voltage measured by the payload
@@ -105,9 +120,9 @@ struct TTelemetry
   float humidity;               // humidity (%) 
   float distance;               // Distance in km to payload
   float bearing;                // Bearing to payload
-  String comment;               // Optional comment for sondehub
+  String comment;               // Optional comment for upload to Sondehub
   String compass;               // Compass direction in terms of "N", "SW", ...
-  String lastField;             // Contains info about whatdata is in the fields after the location and altitude
+  String lastField;             // Contains info about what data is in the fields after the location and altitude
   bool extraFields;             // is true when there are custom fields at the end of the payload data
   bool uploadSondehub;          // is true when the telemetry should be uploaded to Sondehub
   String uploadResult;          // holds the latest upload result to Sondehub
@@ -118,13 +133,15 @@ struct TTelemetry
 ************************************************************************************/
 void setup() 
 {
-  WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); //disable brownout
+  //disable brownout
+  WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); 
+
   Serial.begin(57600);
   
   devflag = DEVFLAG;
   if (devflag)
   {
-     Serial.println("SOFTWARE IS IN DEVELOPMENT MODE, change DEVFLAG in settings.h");
+     Serial.println(F("SOFTWARE IS IN DEVELOPMENT MODE, Data will not be shown on Sondehub. Change DEVFLAG in settings.h"));
   }
   
 #if defined(USE_SSD1306)
@@ -135,9 +152,11 @@ void setup()
   setupWifi();
   updateTime();
   setupWebserver();
+  // Sync the time keeper
   timeCounter = millis();
 
 #if defined(USE_SSD1306)
+    // Init the OLED display
     updateOLEDforFrequency();
 #endif  
 
@@ -180,7 +199,7 @@ void loop()
     timeCounter = millis();
   }
   
-  // Send your position to sondehub
+  // Send your position to sondehub if enabled
   if (UPLOAD_YOUR_POSITION && !uploader_position_sent)
   {
     postStationToServer();

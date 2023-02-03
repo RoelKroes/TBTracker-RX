@@ -15,7 +15,7 @@ WiFiMulti WiFiMulti;
 void setupWifi()
 {
     Serial.println(); Serial.println();
-
+    
     // Set WiFi in Station mode
     WiFi.mode(WIFI_STA);
 
@@ -51,22 +51,31 @@ void setupWifi()
     }
 
     // Try to connect to the stongest know access point
-    Serial.print("[WiFi} Connecting to WiFi, please wait.");
+    Serial.print(F("[WiFi} Connecting to WiFi, please wait."));
 #if defined(USE_SSD1306)
     displayOled(0,0,"Connecting to WiFi...");
 #endif
-    while (WiFiMulti.run() != WL_CONNECTED) 
+    int loopCounter = 0;
+    while (WiFiMulti.run() != WL_CONNECTED && loopCounter < 25) 
     {
       delay(500);
       Serial.print(".");
+      loopCounter++;
     }
-
-    Serial.println("");
-    Serial.print("[WiFi} WiFi connected to: "); Serial.println(WiFi.SSID()); 
-    Serial.print("[WiFi} IP address: "); Serial.println(WiFi.localIP());
-
-    WiFi.setAutoReconnect(true);
-    WiFi.persistent(true);
+    
+    if (WiFi.status() == WL_CONNECTED)
+    {
+       Serial.println("");
+       Serial.print(F("[WiFi} WiFi connected to: ")); Serial.println(WiFi.SSID()); 
+       Serial.print(F("[WiFi} IP address: ")); Serial.println(WiFi.localIP());
+       WiFi.setAutoReconnect(true);
+       WiFi.persistent(true);
+    }
+    else
+    {
+      Serial.println();
+      Serial.println(F("Could not connect to WiFi. No uploading possible."));
+    }
 }
 
 
@@ -78,7 +87,7 @@ void formatLocalTime()
   
   if(!getLocalTime(&timeinfo))
   {
-    Serial.println("Failed to obtain time");
+    Serial.println(F("Failed to obtain time"));
     return;
   }
   strftime(Telemetry.time_received,sizeof(Telemetry.time_received),"%Y-%m-%dT%T.000000Z",&timeinfo);

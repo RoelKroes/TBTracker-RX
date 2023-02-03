@@ -74,7 +74,7 @@ void postStationToServer()
     doc["uploader_contact_email"] = UPLOADER_EMAIL;
     doc["mobile"] = I_AM_MOBILE; 
     JsonArray uploader_position = doc.createNestedArray("uploader_position");
-    // Add the uploader position to the JSON
+    // Add the uploader position to the JSON by populating the nested array
     uploader_position.add(Telemetry.uploader_position[0]);
     uploader_position.add(Telemetry.uploader_position[1]);
     uploader_position.add(Telemetry.uploader_position[2]);
@@ -89,15 +89,14 @@ void postStationToServer()
     
     Serial.println();     
     Serial.println();
-    Serial.println("Uploading your position to Sondehub:");
+    Serial.println(F("Uploading your position to Sondehub:"));
     int httpResponseCode = https.PUT(json);
     
- 
+    // Display the result of the JSON upload 
     if(httpResponseCode>0)
-    {
-       
+    {   
       String response = https.getString();                       
-      Serial.print(httpResponseCode); Serial.print(" - "); Serial.println(response); 
+      Serial.print(httpResponseCode); Serial.print(F(" - ")); Serial.println(response); 
     }
     else 
     { 
@@ -155,7 +154,7 @@ void postDataToServer()
       uploader_position.add(Telemetry.uploader_position[2]);
     }
 
-    // Add non standard data form the payload to the JSON
+    // Add non standard data from the payload to the JSON
     if (Telemetry.extraFields)
     {
         // We need to check for 6, 8, 9, A, B, R, S
@@ -174,7 +173,7 @@ void postDataToServer()
     serializeJson(doc, json);
     json = "[" + json + "]";
     Serial.println();
-    Serial.print("JSON length: "); Serial.println(json.length());
+    Serial.print(F("JSON length: ")); Serial.println(json.length());
 
     int httpResponseCode = https.PUT(json);
     

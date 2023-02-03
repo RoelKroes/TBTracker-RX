@@ -3,7 +3,8 @@
 * 
 * It is important that you work through this file and and change the parameters
 * when needed so.
-*  
+*
+* Download latest version and instructions:  https://github.com/RoelKroes/TBTracker-RX
 ************************************************************************************/
 // Development flag
 // Set to false if you want the software to upload and store your telemetry in the sondehub database
@@ -96,7 +97,6 @@
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
 #define OLED_RESET    -1 // Reset pin # (or -1 if sharing Arduino reset pin)
 #define SCREEN_ADDRESS 0x3C // See datasheet for Address; Usually 0x3D or 0x3C
- 
 /***********************************************************************************
 * LORA SETTINGS
 *  
@@ -107,21 +107,24 @@
 #define LORA_SPREADFACTOR 9          // Do not change, change LORA_MODE instead
 #define LORA_CODERATE 7              // Do not change, change LORA_MODE instead
 #define LORA_SYNCWORD 0x12           // for sx1278
-// #define LORA_SYNCWORD 0x1424      // for sx1262 (currently not supported)
 #define LORA_POWER 10                // in dBm between 2 and 17. 10 = 10mW (recommended), currently not used
 #define LORA_PREAMBLELENGTH 8
 #define LORA_GAIN 0
 
+
 // HAB modes
-// 0 = (normal for telemetry)  Explicit mode, Error coding 4:8, Bandwidth 20.8kHz, SF 11, Low data rate optimize on  - SUPPORTED
-// 1 = (normal for SSDV)       Implicit mode, Error coding 4:5, Bandwidth 20.8kHz,  SF 6, Low data rate optimize off  - SUPPORTED
-// 2 = (normal for repeater)   Explicit mode, Error coding 4:8, Bandwidth 62.5kHz,  SF 8, Low data rate optimize off  - SUPPORTED
-// 3 = (normal for fast SSDV)  Explicit mode, Error coding 4:6, Bandwidth 250kHz,   SF 7, Low data rate optimize off   - SUPPORTED
-// 4 = Test mode not for normal use.   - NOT SUPPORTED YET
-// 5 = (normal for calling mode)   Explicit mode, Error coding 4:8, Bandwidth 41.7kHz, SF 11, Low data rate optimize off   - SUPPORTED
+// 0 = (normal for telemetry)  Explicit mode, Error coding 4:8, Bandwidth 20.8kHz, SF 11, Low data rate optimize on
+// 1 = (normal for SSDV)       Implicit mode, Error coding 4:5, Bandwidth 20.8kHz,  SF 6, Low data rate optimize off
+// 2 = (normal for repeater)   Explicit mode, Error coding 4:8, Bandwidth 62.5kHz,  SF 8, Low data rate optimize off
+// 3 = (normal for fast SSDV)  Explicit mode, Error coding 4:6, Bandwidth 250kHz,   SF 7, Low data rate optimize off
+// 4 = Test mode not for normal use.   - NUT SUPPORTED 
+// 5 = (normal for calling mode)   Explicit mode, Error coding 4:8, Bandwidth 41.7kHz, SF 11, Low data rate optimize off
+// 99 = (LoRa APRS)                Explicit mode, Error coding 4:5, Bandwidth 125KHz,  SF 12 experimental - Only receiving, no i-gating, or uploading. Requires Frequency set to 433.775
+
 // Default tracker mode = 2
+// If you set the radio to mode 99, be sure to set the frequency to 433.775, which is the standard for LoRa-APRS
 #define LORA_MODE 2  // Mode 2 is usually used for simple telemetry data for pico balloons
-#define LORA_MODULATION "LoRa Mode 2" // This string will be shown in Sondehub
+#define LORA_MODULATION "LoRa Mode 2" // This string will be visible in Sondehub
 
 /***********************************************************************************
 * TIME SETTINGS

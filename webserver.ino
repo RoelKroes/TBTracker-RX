@@ -3,6 +3,7 @@
 ************************************************************************************/
 #include <ESPAsyncWebServer.h>
 
+// webserver on standard port 80. But can be any port.
 AsyncWebServer server(80);
 
 void notFound(AsyncWebServerRequest *request);
@@ -59,6 +60,7 @@ const char index_html[] PROGMEM = R"rawliteral(
         <option value="2">Mode 2</option>
         <option value="3">Mode 3</option>
         <option value="5">Mode 5</option>
+        <option value="99">LoRa APRS (experimental)</option>
       </select>
       <input type="submit" value="change">
     </form>
@@ -71,7 +73,7 @@ const char index_html[] PROGMEM = R"rawliteral(
     <td>Your location:</td><td><a href="https:www.google.com/maps/place/%LOCATION%" target="_blank">Google Maps</a></td><td>&nbsp;</td>
     </tr>
     <tr>
-    <td>Upload to <a href="https:amateur.sondehub.org/">Sondehub:</a></td><td>%SONDEHUB%</td>
+    <td>Upload to <a href="https:amateur.sondehub.org/" target="_blank">Sondehub:</a></td><td>%SONDEHUB%</td>
     <td><form action="/get2"><input type="submit" value="toggle"></form></td>
     </tr>
     <tr>
@@ -92,7 +94,7 @@ const char index_html[] PROGMEM = R"rawliteral(
 <table class="myTable" border="0" width="100%%" height="50">
   <tbody>
     <tr>
-    <td>Payload ID:</td><td><B>%PAYLOADID%</B> (SNR: %SNR% dB, RSSI: %RSSI% dBm)</td>
+    <td>Payload ID:</td><td><B>%PAYLOADID%</B> (SNR: %SNR% dB, RSSI: %RSSI% dBm, FREQ.ERR.: %FERROR% Hz)</td>
     </tr>
     <tr>
     <td>Telemetry:</td><td style="white-space:nowrap">%TELEMETRY%</td>
@@ -101,7 +103,7 @@ const char index_html[] PROGMEM = R"rawliteral(
     <td>Location:</td><td><a href="https:www.google.com/maps/place/%PAYLOADLOCATION%" target="_blank">Google Maps</a></td>
     </tr>
     <tr>
-    <td>Altitude:</td><td><B>%ALTITUDE%</B></td>
+    <td>Altitude (m):</td><td><B>%ALTITUDE%</B></td>
     </tr>
     <tr>
     <td>Distance (km):</td><td>%DISTANCE%</td>
@@ -114,6 +116,21 @@ const char index_html[] PROGMEM = R"rawliteral(
     </tr>    
   </tbody>
 </table>  
+
+<table class="myTable" border="0" width="100%%" height="50">
+  <tbody>
+    <tr>
+      <th align="center">LAST PACKETS</th>
+    </tr>
+  </tbody>
+</table>
+
+<table class="myTable" border="0" width="100%%" height="50">
+  <tbody>
+  %LOGHISTORY% 
+  </tbody>
+</table>  
+
 <p>
 (Page will autoload every 20 seconds. If not, press the button)
 </p>  
@@ -144,13 +161,17 @@ String processor(const String& var)
   else if (var == "ALTITUDE")
     return String(Telemetry.alt,0);
   else if (var == "DISTANCE")
-    return String(Telemetry.distance,1);
+    return String(Telemetry.distance,2);
   else if (var == "BEARING")
     return String(Telemetry.bearing,0);  
-  else if (var == "SNR")
+  else if (var == "SNR")  
     return String(Telemetry.snr);
+  else if (var == "LOGHISTORY")
+    return getLogs();
   else if (var == "RSSI")
     return String(Telemetry.rssi);
+  else if (var == "FERROR")
+    return String(Telemetry.frequency_error);
   else if (var == "LORAMODE")
     return String(LoRaSettings.LoRaMode);
   else if (var == "TIMESINCE")
@@ -186,7 +207,6 @@ String processor(const String& var)
  
 }
 
-
 /************************************************************************************
 * HTML template for when the user requests a non existing page
 ************************************************************************************/
@@ -200,7 +220,6 @@ void notFound(AsyncWebServerRequest *request)
 ************************************************************************************/
 void setupWebserver()
 {
-    
     
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
     {
@@ -255,7 +274,7 @@ void setupWebserver()
         inputMessage = request->getParam("frequency")->value();
         inputParam = "frequency";
       }
-      Serial.print("Frequency change to: ");
+      Serial.print("Frequency changed to: ");
       Serial.println(inputMessage); 
       // Try to change the frequency
       if ( changeFrequency(inputMessage) ) 

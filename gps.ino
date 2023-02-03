@@ -35,6 +35,7 @@ static void processGPSData()
   }
   else
   {
+    // Invalid GPS position, use data from settings.h 
     Telemetry.uploader_position[0] = UPL_LAT;
     Telemetry.uploader_position[1] = UPL_LON;
   }
@@ -43,6 +44,7 @@ static void processGPSData()
  if (gps.altitude.isValid())
     Telemetry.uploader_position[2] = gps.altitude.meters();
  else
+   // Invalid altitude, use data from settings.h
    Telemetry.uploader_position[2] = UPL_ALT;   
 }
 
@@ -50,17 +52,17 @@ static void processGPSData()
 
 
 /************************************************************************************
- * Compute great-circle distance in km, using haversine formula
- * 
- * The haversine formula 'remains particularly well-conditioned for numerical 
- * computation even at small distances'
- * 
- * It was published by R W Sinnott in Sky and Telescope, 1984, though known about 
- * for much longer by navigators. (For the curious, c is the angular distance in 
- * radians, and a is the square of half the chord length between the points).
- * 
- * We don't adjust for altitude. Maybe in a future version.
- ************************************************************************************/
+* Compute great-circle distance in km, using haversine formula
+* 
+* The haversine formula 'remains particularly well-conditioned for numerical 
+* computation even at small distances'
+* 
+* It was published by R W Sinnott in Sky and Telescope, 1984, though known about 
+* for much longer by navigators. (For the curious, c is the angular distance in 
+* radians, and a is the square of half the chord length between the points).
+* 
+* We don't adjust for altitude. Maybe in a future version. 
+************************************************************************************/
 float GPSDistance(float lat1, float lon1, float lat2, float lon2)
 {
   float ToRad = PI / 180.0;
@@ -80,14 +82,14 @@ float GPSDistance(float lat1, float lon1, float lat2, float lon2)
 }
 
 /************************************************************************************
- * Compute bearing from current location to the location of the payload
- * Can be used for chasing a payload.
- * 
- * lat = current latitude
- * lon = current longitude
- * lat2 = payload latitude
- * lon2 = payload longitude
- ************************************************************************************/
+* Compute bearing from current location to the location of the payload
+* Can be used for chasing a payload.
+* 
+* lat = current latitude
+* lon = current longitude
+* lat2 = payload latitude
+* lon2 = payload longitude
+************************************************************************************/
 float GPSBearing(float lat,float lon,float lat2,float lon2){
 
     float teta1 = radians(lat);

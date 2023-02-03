@@ -2,7 +2,6 @@
 * Telemetry parser related stuff.
 ************************************************************************************/
 
-
 /************************************************************************************
  *   Get the last field from the RAW packet and determine if it contains metadata
  *************************************************************************************/
@@ -132,120 +131,92 @@ void parseRawData(String rawData)
        if (counter == 0)  // payload_callsign
        {
          Telemetry.payload_callsign = token;
-         Serial.println(); Serial.print("Payload callsign:\t"); Serial.println(Telemetry.payload_callsign);
+         Serial.println(); Serial.print(F("Payload callsign:\t")); Serial.println(Telemetry.payload_callsign);
        }
 
        if (counter == 1)  // frame
        {
          Telemetry.frame = atol(token);
-         Serial.print("Payload frame:\t\t"); Serial.println(Telemetry.frame);
+         Serial.print(F("Payload frame:\t\t")); Serial.println(Telemetry.frame);
        }
 
        if (counter == 2) // Time
        {
         strftime(Telemetry.datetime,sizeof(Telemetry.datetime),"%Y-%m-%dT",&timeinfo);
         strcat(Telemetry.datetime,token); strcat(Telemetry.datetime,".000000Z");
-        Serial.print("Payload time:\t\t"); Serial.println(Telemetry.datetime);
+        Serial.print(F("Payload time:\t\t")); Serial.println(Telemetry.datetime);
        }
 
        if (counter == 3) // Latitude
        {
          Telemetry.lat = atof(token); 
-         Serial.print("Latitude:\t\t"); Serial.println(Telemetry.lat,5);
+         Serial.print(F("Latitude:\t\t")); Serial.println(Telemetry.lat,5);
        }
        
        if (counter == 4) // Longitude
        {
          Telemetry.lon = atof(token); 
-         Serial.print("Longitude:\t\t"); Serial.println(Telemetry.lon,5);
+         Serial.print(F("Longitude:\t\t")); Serial.println(Telemetry.lon,5);
        }
 
        if (counter == 5) // Altitude
        {
          Telemetry.alt = atof(token); 
-         Serial.print("Altitude:\t\t"); Serial.println(Telemetry.alt,0);
+         Serial.print(F("Altitude:\t\t")); Serial.println(Telemetry.alt,0);
        }
 
-       // All fields below here are considered metaData and only sent when defined in the payloaddata
+       // All fields below here are considered metaData are and only sent when defined in the payloaddata
       if ((Telemetry.extraFields) && (counter > 5) && (counter < Telemetry.lastField.length()))
       {
 
         switch (Telemetry.lastField[counter])
         {
           case '6': Telemetry.sats = atoi(token);
-                    Serial.print("Satellites:\t\t");
+                    Serial.print(F("Satellites:\t\t"));
                     Serial.println(Telemetry.sats);
                     break;
           case '8': Telemetry.heading = atof(token);
-                    Serial.print("Heading:\t\t");
+                    Serial.print(F("Heading:\t\t"));
                     Serial.println(Telemetry.heading,0);
                     break;
           case '9': Telemetry.batt = atof(token);
-                    Serial.print("Battery voltage:\t");
+                    Serial.print(F("Battery voltage:\t"));
                     Serial.println(Telemetry.batt,2);
                     break;
           case 'A': 
           case 'B': Telemetry.temp = atoi(token);
-                    Serial.print("Temperature:\t\t");
+                    Serial.print(F("Temperature:\t\t"));
                     Serial.println(Telemetry.temp);
                     break;
           case 'R': Telemetry.pressure = atof(token);
-                    Serial.print("Pressure (hPa):\t\t");
+                    Serial.print(F("Pressure (hPa):\t\t"));
                     Serial.println(Telemetry.pressure,1);
                     break;                    
          case 'S': Telemetry.humidity = atof(token);
-                    Serial.print("Humidity (%):\t\t");
+                    Serial.print(F("Humidity (%):\t\t"));
                     Serial.println(Telemetry.humidity,0);
                     break;                    
-          default:  Serial.print("Extra field: ");
+          default:  Serial.print(F("Extra field: "));
                     Serial.print(token);
                     Serial.print(" ");
                     Serial.println(Telemetry.lastField[counter]);           
                     break;
         }
-
       }
-
-       
-       token=strtok(NULL, delimiter);
-       counter++;
+      token=strtok(NULL, delimiter);
+      counter++;
     }
 
 #if defined(PAYLOAD_COMMENT)    
     Telemetry.comment = PAYLOAD_COMMENT;
-    Serial.print("Comment:\t\t");
+    Serial.print(F("Comment:\t\t"));
     Serial.println(Telemetry.comment);
 #endif
 
-
     // 3. Parse the GPS data or use the position from the Settings file
     Serial.println();
-#if defined(USE_GPS)    
-    processGPSData();
-
-    Serial.println("Your position from GPS:");
-    Serial.print("Your GPS latitude:\t"); Serial.println(Telemetry.uploader_position[0],5);
-    Serial.print("Your GPS longitude:\t"); Serial.println(Telemetry.uploader_position[1],5);
-    Serial.print("Your GPS Altitude:\t"); Serial.println(Telemetry.uploader_position[2],0);
-#else
-    Telemetry.uploader_position[0] = UPL_LAT;
-    Telemetry.uploader_position[1] = UPL_LON;
-    Telemetry.uploader_position[2] = UPL_ALT;
-    Serial.println("Your position from settings:");
-    Serial.print("Your latitude:\t"); Serial.println(Telemetry.uploader_position[0],5);
-    Serial.print("Your longitude:\t"); Serial.println(Telemetry.uploader_position[1],5);
-    Serial.print("Your Altitude:\t"); Serial.println(Telemetry.uploader_position[2],0);
-#endif
-
-   // Show the distance between the receiver and the balloon
-   Telemetry.distance = GPSDistance(Telemetry.uploader_position[0],Telemetry.uploader_position[1],Telemetry.lat,Telemetry.lon);
-   Serial.print("Distance (km):\t\t"); Serial.println(Telemetry.distance,1);
-
-   // Show the bearing between the receiver and the balloon
-   Telemetry.bearing = GPSBearing(Telemetry.uploader_position[0],Telemetry.uploader_position[1],Telemetry.lat,Telemetry.lon);
-   // Get the bearing in compass direction
-   Telemetry.compass = degToCompass(Telemetry.bearing);
-   Serial.print("Bearing (degr.):\t"); Serial.print(Telemetry.bearing,0); Serial.print(" - travel "); Serial.print(Telemetry.compass); Serial.println(" to chase");
+    setUploaderPosition();
+    setDistanceAndBearing();
 
    // 4. Update the OLED display
 #if defined(USE_SSD1306)
@@ -256,11 +227,59 @@ void parseRawData(String rawData)
     if (Telemetry.uploadSondehub) postDataToServer();    
 
    // 6. Close the packet with some dashes
-   Serial.println(F("----------------------------"));  
-   Serial.println();
-   Serial.println();
+   closePacket();
 }
 
+
+/************************************************************************************
+* Create a visual end-of-packet on the Serial console
+************************************************************************************/
+void closePacket()
+{
+  Serial.println(F("----------------------------"));  
+  Serial.println();
+  Serial.println();
+}
+
+/************************************************************************************
+* Determine your position
+************************************************************************************/
+void setUploaderPosition()
+{
+#if defined(USE_GPS)    
+    processGPSData();
+
+    Serial.println(F("Your position from GPS:"));
+    Serial.print(F("Your GPS latitude:\t")); Serial.println(Telemetry.uploader_position[0],5);
+    Serial.print(F("Your GPS longitude:\t")); Serial.println(Telemetry.uploader_position[1],5);
+    Serial.print(F("Your GPS Altitude:\t")); Serial.println(Telemetry.uploader_position[2],0);
+#else
+    Telemetry.uploader_position[0] = UPL_LAT;
+    Telemetry.uploader_position[1] = UPL_LON;
+    Telemetry.uploader_position[2] = UPL_ALT;
+    Serial.println(F("Your position from settings:"));
+    Serial.print(F("Your latitude:\t")); Serial.println(Telemetry.uploader_position[0],5);
+    Serial.print(F("Your longitude:\t")); Serial.println(Telemetry.uploader_position[1],5);
+    Serial.print(F("Your Altitude:\t")); Serial.println(Telemetry.uploader_position[2],0);
+#endif
+}
+
+/************************************************************************************
+* Determine the distance and bearing from your position to the tracker
+************************************************************************************/
+void setDistanceAndBearing()
+{
+   // Show the distance between the receiver and the balloon
+   Telemetry.distance = GPSDistance(Telemetry.uploader_position[0],Telemetry.uploader_position[1],Telemetry.lat,Telemetry.lon);
+   Serial.print(F("Distance (km):\t\t")); Serial.println(Telemetry.distance,2);
+
+   // Show the bearing between the receiver and the balloon
+   Telemetry.bearing = GPSBearing(Telemetry.uploader_position[0],Telemetry.uploader_position[1],Telemetry.lat,Telemetry.lon);
+
+   // Get the bearing in compass direction
+   Telemetry.compass = degToCompass(Telemetry.bearing);
+   Serial.print(F("Bearing (degr.):\t")); Serial.print(Telemetry.bearing,0); Serial.print(" - travel "); Serial.print(Telemetry.compass); Serial.println(" to chase");
+}
 
 /************************************************************************************
 * Check the CRC from the received data
@@ -303,7 +322,7 @@ bool CheckCRC(char *dataStr, char *crcStr)
    }
    else
    {
-      Serial.println(" << CRC NOT CORRECT!");
+      Serial.println(F(" << CRC NOT CORRECT!"));
      return false;
    }
 }
