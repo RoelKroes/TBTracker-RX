@@ -50,9 +50,21 @@ Compile, upload and run the sketch. Use the Serial Monitor to monitor the softwa
 Just enter the ip-number in a browser and the web interface will show. From the web interface you can change the RX frequency and toggle the option to upload telemetry to Sondehub. The main webpage will autoload every 20 seconds and will show you which direction you need to go if you want to chase your balloon.
 
 # Versions
+v0.0.8:
+- 23-FEB-2023: Added support for different visual modes for the OLED (default, all, chase)
+- 24-FEB-2023: Added support for a "FLASH PIN" which will set HIGH for 300ms when a packet is received (new entry in settings file!)
+ 
+ Many thanks to Star Holden, Luc Bodson and Eelco de Graaff for testing and suggesting improvements
+
+- Example of the three OLED modes
+
+![IMG-6557](https://user-images.githubusercontent.com/58561387/222697528-747ce37b-25bc-49ef-a2cb-feca527335bf.JPG)
+![IMG-6559](https://user-images.githubusercontent.com/58561387/222697536-9b1211c6-e4a5-4414-aa3b-89f98305b998.JPG)
+![IMG-6555](https://user-images.githubusercontent.com/58561387/222697542-d7b8b98e-4abe-41ea-9730-17eccb419490.JPG)
+ 
 v0.0.7:
-- 03-02-2023: The link to Sondehub in the web interface now opens in a new window
-- 03-02-2023: Software now works also without WiFi (data on Serial output or OLED display)
+- 03-FEB-2023: The link to Sondehub in the web interface now opens in a new window
+- 03-FEB-2023: Software now works also without WiFi (data on Serial output or OLED display)
 
 v0.0.6
 - 29-JAN-2023: Added a parser for the APRS packets to display on the Serial interface, webinterface and SSD1306 display
