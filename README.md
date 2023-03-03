@@ -23,11 +23,11 @@ The sketch uses several libraries. Some will probably already be installed in yo
 - Adafruit_GFX library (install from the library manager)
 - Adafruit_BusIO library (install from the library manager)
 - Radiolib library (install from the library manager)
-- TinyGPSPlus library ((install from the library manager)
-- ESPAsyncWebServer library (download: https://github.com/me-no-dev/ESPAsyncWebServer/archive/master.zip )
-- AsyncTCP library (download: https://github.com/me-no-dev/AsyncTCP/archive/master.zip )
+- TinyGPSPlus library (install from the library manager)
+- ESPAsyncWebServer library (install from the library manager or download: https://github.com/me-no-dev/ESPAsyncWebServer/archive/master.zip)
+- AsyncTCP library (install from the library manager or download: https://github.com/me-no-dev/AsyncTCP/archive/master.zip)
 
-Install the last two libraries from the IDE menu: Sketch -> Include Library -> Add .ZIP library
+If not using the library manager then install the last two libraries from the IDE menu: Sketch -> Include Library -> Add .ZIP library
 
 # settings.h
 You will need to change the values in settings.h before you can use the sketch.
