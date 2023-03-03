@@ -127,6 +127,17 @@
 #define LORA_MODULATION "LoRa Mode 2" // This string will be visible in Sondehub
 
 /***********************************************************************************
+* FLASH PIN settings
+*  
+* This pin will be set HIGH for 300ms when a new packet is received
+* You can for example attach a LED to it. 
+* It can be any pin you find suitable on your board
+*
+* Uncomment and change the pin number when you do need a flash pin
+************************************************************************************/
+// #define FLASH_PIN 14
+
+/***********************************************************************************
 * TIME SETTINGS
 *  
 * Change when needed
