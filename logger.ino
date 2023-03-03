@@ -41,7 +41,7 @@ String getLogs()
       
       // Time since
       res +="<td style=""white-space:nowrap"">";
-      res += getDuration(millisLogger[i]);
+      res += getDuration(millisLogger[i],false);
       res += "</td>";
       // Telemetry string
       res +="<td style=""white-space:nowrap"">";

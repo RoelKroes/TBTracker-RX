@@ -3,15 +3,21 @@
 * 
 * A mobile software platform for receiving LoRa transmissions and uploading those 
 * to amateur.sondehub.org. The software is designed to run on the esp32 platform. 
-* A TTGO T-Beam would be ideal. It has WiFi connectivity and a simple web interface
+* A TTGO T-Beam would be ideal. It has WiFi connectivity, a simple web interface and support for a OLED display
 * 
-* First adjust the settings in the settings file.
+* First adjust the settings in the settings file <<<<<<<<<<<<<<<<<<<<
 * 
 * Be sure you run the latest version of the Arduino IDE.
 *
+* v0.0.8
+* 23-FEB-2023: Added support for different visual modes for the OLED (default, all, chase)
+* 24-FEB-2023: Added support for a "FLASH PIN" which will set HIGH for 300ms when a packet is received (new entry in settings file!)
+*
+* Thanks to Star Holden, Luc Bodson and Eelco de Graaff for testing and suggesting improvements
+*
 * v0.0.7
-* 03-02-2023: The link to Sondehub in the web interface now opens in a new window
-* 03-02-2023: Software now works also without WiFi (data on Serial output or OLED display)
+* 03-FEB-2023: The link to Sondehub in the web interface now opens in a new window
+* 03-FEB-2023: Software now works also without WiFi (data on Serial output or OLED display)
 *
 * v0.0.6
 * 29-JAN-2023: Added a parser for the APRS packets to display on the Serial interface, webinterface and SSD1306 display
@@ -60,7 +66,7 @@
 #include "settings.h"
 
 // TBTracker-RX version number
-#define TBTRACKER_VERSION "V0.0.7"
+#define TBTRACKER_VERSION "V0.0.8"
 
 // Struct to hold LoRA settings
 struct TLoRaSettings
@@ -133,7 +139,7 @@ struct TTelemetry
 ************************************************************************************/
 void setup() 
 {
-  //disable brownout
+  // disable brownout
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); 
 
   Serial.begin(57600);
@@ -152,6 +158,12 @@ void setup()
   setupWifi();
   updateTime();
   setupWebserver();
+  
+#if defined(FLASH_PIN)
+  // Setup the pin that flashes when a packet is received 
+  setupFlashPin();
+#endif
+
   // Sync the time keeper
   timeCounter = millis();
 
@@ -190,6 +202,11 @@ void loop()
 #if defined(USE_GPS)  
   // Poll the GPS
   smartDelay(700);
+#endif  
+
+#if defined(USE_SSD1306)  
+  // Update the OLED if necessary
+  timedOledUpdate();
 #endif  
 
   // Keep track of the time for re-uploading your position

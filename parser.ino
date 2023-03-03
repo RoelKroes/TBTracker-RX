@@ -218,15 +218,20 @@ void parseRawData(String rawData)
     setUploaderPosition();
     setDistanceAndBearing();
 
-   // 4. Update the OLED display
+    // 4. Update the OLED display
 #if defined(USE_SSD1306)
    displayUpdate(); 
 #endif       
 
-    // 5. Upload to Sondehub
+   // 5. Flash the flash pin if defined and add to the web log
+#if defined(FLASH_PIN)
+   flashPin();
+#endif  
+
+   // 6. Upload to Sondehub
     if (Telemetry.uploadSondehub) postDataToServer();    
 
-   // 6. Close the packet with some dashes
+   // 7. Close the packet with some dashes
    closePacket();
 }
 

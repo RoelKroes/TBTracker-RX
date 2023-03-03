@@ -80,6 +80,20 @@ const char index_html[] PROGMEM = R"rawliteral(
     <td>Test mode:</a></td><td>%DEVFLAG%</td>
     <td><form action="/get3"><input type="submit" value="toggle"></form></td>
     </tr>
+    <tr>
+    <td>OLED Mode:</td><td>%OLEDMODE%</td>
+    <td>
+    <form action="/get5">
+      <select id="oledmodes" name="oledmodes">
+        <option value="0">&nbsp;</option>
+        <option value="0">Default mode</option>
+        <option value="1">Chase mode</option>
+        <option value="2">See it All mode</option>
+      </select>
+      <input type="submit" value="change">
+    </form>
+    </td> 
+    </tr>    
   </tbody>
 </table>
  
@@ -174,10 +188,28 @@ String processor(const String& var)
     return String(Telemetry.frequency_error);
   else if (var == "LORAMODE")
     return String(LoRaSettings.LoRaMode);
+
+#if defined(USE_SSD1306)
+  else if (var == "OLEDMODE")
+  {
+    switch (oledMode)
+    {
+      case OLED_CHASE:
+        return String("Chase");
+      break;
+      case OLED_GOD:
+        return String("See it all");
+      break;
+      default:
+        return String("Default");
+      break;
+    }
+  }
+#endif  
   else if (var == "TIMESINCE")
   {
     if (Telemetry.atmillis > 0)
-      return getDuration(Telemetry.atmillis);
+      return getDuration(Telemetry.atmillis,false);
     else
      return ""; 
   }
@@ -262,6 +294,27 @@ void setupWebserver()
         } 
         request->send(200, "text/html", "LoRa mode was changed.<br><a href=\"/\">Return to Home Page</a>");
     });
+
+#if defined(USE_SSD1306)
+    server.on("/get5", HTTP_GET, [](AsyncWebServerRequest *request)
+    {
+        String oledMode;
+        if (request->hasParam("oledmodes"))
+        {
+          oledMode = request->getParam("oledmodes")->value();
+          if (changeOLEDMode(oledMode.toInt()))
+          {
+            request->send(200, "text/html", "OLED mode was changed.<br><a href=\"/\">Return to Home Page</a>");
+          }
+          else
+          {
+            request->send(200, "text/html", "OLED mode was NOT changed.<br><a href=\"/\">Return to Home Page</a>");
+          }
+          
+        } 
+        request->send(200, "text/html", "OLED mode was changed.<br><a href=\"/\">Return to Home Page</a>");
+    });
+#endif
 
     server.on("/get", HTTP_GET, [] (AsyncWebServerRequest *request) 
     {
