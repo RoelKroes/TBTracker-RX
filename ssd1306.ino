@@ -35,7 +35,7 @@ void setupSSD1306()
 }
 
 /************************************************************************************
-* This function is called about once per second
+* This function is called about once every 10 secs
 ************************************************************************************/
 void timedOledUpdate()
 {
@@ -93,7 +93,8 @@ void displayClear()
 bool changeOLEDMode(int aMode)
 {
   oledMode = aMode;
-  displayUpdate();
+  // displayUpdate();
+  oledUpdateNeeded = true;
   return true;
 }
 
@@ -102,69 +103,70 @@ bool changeOLEDMode(int aMode)
 ************************************************************************************/
 void displayUpdate()
 {
-  // flash the screen
-  displayFlash();
-
-  switch (oledMode)
+  if (oledUpdateNeeded)
   {
-    case OLED_DEFAULT:
-      display.clearDisplay();
-      display.setTextSize(1);
-      display.setTextColor(WHITE);
-      display.setCursor(0, 0);
-      display.print("IP: ");
-      display.println(WiFi.localIP().toString().c_str());
-      display.print("#"); display.println(packetCounter);
-      display.print("       ID: "); display.println(Telemetry.payload_callsign);
-      display.print("Frequency: "); display.println(Telemetry.frequency,3);
-      display.print(" Altitude: "); display.println(Telemetry.alt,0);
-      display.print(" Distance: "); display.println(Telemetry.distance,1);
-      display.print("    Chase: "); display.println(Telemetry.compass); 
-      display.setTextColor(SSD1306_BLACK, SSD1306_WHITE); // Draw 'inverse' text
-      display.print("TBTacker-RX "); display.print(TBTRACKER_VERSION);
-      display.display();
-    break; 
-    case OLED_CHASE:
-      drawCompass();
-    break; 
-    case OLED_GOD:
-      display.clearDisplay();
-      display.setTextSize(1);
-      display.setTextColor(WHITE);
-      display.setCursor(0, 0);
-      display.print(getDuration(Telemetry.atmillis,true));
-      display.setCursor(97, 0);
-      display.print("#"); display.print(packetCounter);
-      display.drawLine(0, 10, 128, 10, WHITE);
-      display.setCursor(0, 13);
-      display.print(Telemetry.payload_callsign);
-      display.setCursor(64, 13);
-      display.print(Telemetry.frequency, 3); display.print("MHz");
-      display.setCursor(0, 23);
-      display.print(Telemetry.alt, 0); display.print("m");
-      display.setCursor(64, 23);
-      if (Telemetry.distance < 10)
-        display.print(Telemetry.distance, 1); 
-      else
-        display.print(Telemetry.distance, 0); 
-      display.print("km");
-      display.setCursor(105, 23);
-      display.print(Telemetry.compass);
-      display.setCursor(0, 33);
-      display.print(Telemetry.batt, 2); display.print("V");
-      display.setCursor(64, 33);
-      display.print(Telemetry.snr); display.print("dB");
-      display.setCursor(0, 43);
-      display.print(Telemetry.temp, 1); display.print((char)247); display.print("C");
-      display.setCursor(64, 43);
-      display.print(Telemetry.sats); display.print(" sats");
-      display.setCursor(0, 53);
-      display.print(Telemetry.lat, 6);
-      display.setCursor(64, 53);
-      display.print(Telemetry.lon, 6);
-      display.display();    
-    break; 
-  }
+    switch (oledMode)
+    {
+      case OLED_DEFAULT:
+        display.clearDisplay();
+        display.setTextSize(1);
+        display.setTextColor(WHITE);
+        display.setCursor(0, 0);
+        display.print("IP: ");
+        display.println(WiFi.localIP().toString().c_str());
+        display.print("#"); display.println(packetCounter);
+        display.print("       ID: "); display.println(Telemetry.payload_callsign);
+        display.print("Frequency: "); display.println(Telemetry.frequency,3);
+        display.print(" Altitude: "); display.println(Telemetry.alt,0);
+        display.print(" Distance: "); display.println(Telemetry.distance,1);
+        display.print("    Chase: "); display.println(Telemetry.compass); 
+        display.setTextColor(SSD1306_BLACK, SSD1306_WHITE); // Draw 'inverse' text
+        display.print("TBTacker-RX "); display.print(TBTRACKER_VERSION);
+        display.display();
+      break; 
+      case OLED_CHASE:
+        drawCompass();
+      break; 
+      case OLED_GOD:
+        display.clearDisplay();
+        display.setTextSize(1);
+        display.setTextColor(WHITE);
+        display.setCursor(0, 0);
+        display.print(getDuration(Telemetry.atmillis,true));
+        display.setCursor(97, 0);
+        display.print("#"); display.print(packetCounter);
+        display.drawLine(0, 10, 128, 10, WHITE);
+        display.setCursor(0, 13);
+        display.print(Telemetry.payload_callsign);
+        display.setCursor(64, 13);
+        display.print(Telemetry.frequency, 3); display.print("MHz");
+        display.setCursor(0, 23);
+        display.print(Telemetry.alt, 0); display.print("m");
+        display.setCursor(64, 23);
+        if (Telemetry.distance < 10)
+          display.print(Telemetry.distance, 1); 
+        else
+          display.print(Telemetry.distance, 0); 
+        display.print("km");
+        display.setCursor(105, 23);
+        display.print(Telemetry.compass);
+        display.setCursor(0, 33);
+        display.print(Telemetry.batt, 2); display.print("V");
+        display.setCursor(64, 33);
+        display.print(Telemetry.snr); display.print("dB");
+        display.setCursor(0, 43);
+        display.print(Telemetry.temp, 1); display.print((char)247); display.print("C");
+        display.setCursor(64, 43);
+        display.print(Telemetry.sats); display.print(" sats");
+        display.setCursor(0, 53);
+        display.print(Telemetry.lat, 6);
+        display.setCursor(64, 53);
+        display.print(Telemetry.lon, 6);
+        display.display();    
+      break; 
+    }
+    oledUpdateNeeded = false;
+  } 
 }
 
 /************************************************************************************
@@ -179,8 +181,12 @@ void displayFlash()
   display.print("PACKET RX");
   display.display();
   display.invertDisplay(true);
-  delay(400);
-  display.invertDisplay(false);
+  flashMillis = millis();  
+}
+
+void disableFlash()
+{
+  display.invertDisplay(false);;
 }
 
 

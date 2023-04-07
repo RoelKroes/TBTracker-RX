@@ -19,7 +19,7 @@ static void smartDelay(unsigned long ms)
   {
     while (Serial2.available())
       gps.encode(Serial2.read());
-  } while (millis() - start < ms);
+  } while ((millis() - start < ms) && !receivedFlag);
 }
 
 /************************************************************************************

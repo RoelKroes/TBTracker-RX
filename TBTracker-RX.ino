@@ -9,6 +9,12 @@
 * 
 * Be sure you run the latest version of the Arduino IDE.
 *
+* v0.0.9 pre-release
+* 03-MAR-2023: Serial port baudrate to 115200
+* 15-MAR-2023: Added support for SSDV
+* 20-MAR-2023: changed uploading part of the code. uploading will now take place from a queue and in a seperate thread
+* 07-APR-2023: disabled temporary timed OLED update and OLED Flash and PIN flash
+*
 * v0.0.8
 * 23-FEB-2023: Added support for different visual modes for the OLED (default, all, chase)
 * 24-FEB-2023: Added support for a "FLASH PIN" which will set HIGH for 300ms when a packet is received (new entry in settings file!)
@@ -66,20 +72,24 @@
 #include "settings.h"
 
 // TBTracker-RX version number
-#define TBTRACKER_VERSION "V0.0.8"
+#define TBTRACKER_VERSION "V0.0.9"
+// MAX possible length for a packet
+#define PACKETLEN 255
 
 // Struct to hold LoRA settings
 struct TLoRaSettings
 {
   uint8_t LoRaMode = LORA_MODE;
   float Frequency = LORA_FREQUENCY;
-  float Bandwidth = LORA_BANDWIDTH;
-  uint8_t SpreadFactor = LORA_SPREADFACTOR;
-  uint8_t CodeRate = LORA_CODERATE;
-  uint8_t SyncWord = LORA_SYNCWORD;
-  uint8_t Power = LORA_POWER;
-  uint16_t PreambleLength =  LORA_PREAMBLELENGTH;
-  uint8_t Gain = LORA_GAIN;
+  float Bandwidth;
+  uint8_t SpreadFactor;
+  uint8_t CodeRate;
+  uint8_t SyncWord;
+  uint8_t Power;
+  uint16_t PreambleLength;
+  uint8_t Gain;
+  size_t implicitHeader = 255;
+  uint8_t packetType;
 } LoRaSettings;
 
 // Struct to hold Time information
@@ -96,6 +106,22 @@ unsigned long packetCounter = 0;
 
 // Holder for the dev flag. If dev flag is true than data sent to Sondehub is not added to the database. Can be set in settings.h
 bool devflag;
+
+// flag to indicate that a packet was received
+volatile bool receivedFlag = false;
+
+// Variable to hold the time that the OLED display was turned inverted
+unsigned long flashMillis;
+
+// Variable to hold the time that the OLED was updated
+unsigned long oledLastUpdated=0;
+bool oledUpdateNeeded = false;
+
+TaskHandle_t task_UploadSSDV;   // Uploading the queue with SSDV packets to the SSDV server on core 0.
+TaskHandle_t task_UploadTelemetry;   // Uploading the queue with Telemetry packets to the Sondehub server on core 0.
+TaskHandle_t task_updateDisplay; // Task for updating the oled display in the background in Core 0
+QueueHandle_t ssdv_Queue;  // queue which will hold the SSDV records to send to the server
+QueueHandle_t telemetry_Queue; // queue which will hold the JSON docs to upload to the Sondehub server
 
 /************************************************************************************
 * Struct and variable which contains the latest telemetry
@@ -134,6 +160,32 @@ struct TTelemetry
   String uploadResult;          // holds the latest upload result to Sondehub
 } Telemetry;
 
+
+/************************************************************************************
+* Parallel task that runs on core 0 and handles uploading of the SSDV packets
+************************************************************************************/
+void uploadSSDV(void * parameter)
+{
+  for (;;)   // Run forever
+  {
+    // Processing the queue
+    postSSDVToServer();
+  }
+}
+
+
+/************************************************************************************
+* Parallel task that runs on core 0 and handles uploading of the Telemetry packets
+************************************************************************************/
+void uploadTelemetry(void * parameter)
+{
+  for (;;)   // Run forever
+  {
+    // Processing the queue
+    postTelemetryToServer(); 
+  }
+}
+
 /************************************************************************************
 * Setting up all parts of the program
 ************************************************************************************/
@@ -142,18 +194,67 @@ void setup()
   // disable brownout
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); 
 
-  Serial.begin(57600);
+  Serial.begin(115200);
   
+  // Switching off bluetooth
+  btStop();
+
   devflag = DEVFLAG;
   if (devflag)
   {
      Serial.println(F("SOFTWARE IS IN DEVELOPMENT MODE, Data will not be shown on Sondehub. Change DEVFLAG in settings.h"));
   }
+
   
+  // Create the Telemetry queue with 3 slots of 10124 bytes
+  telemetry_Queue = xQueueCreate(3, 1024);
+  if (telemetry_Queue == NULL)
+  {
+    Serial.println("Error creating the telemetry queue");
+  }
+  else
+  {
+     // Start the SSDV queue uploader task on core 0
+    xTaskCreatePinnedToCore
+    (
+		   uploadTelemetry, /* Function to implement the task */
+		  "task_UploadTelemetry", /* Name of the task */
+			10000, /* Stack size in words */
+			NULL, /* Task input parameter */
+			0, /* Priority of the task */
+			&task_UploadTelemetry, /* Task handle. */
+			0 /* Core where the task should run */
+    );  
+  }
+
+  // Create the SSDV queue with 10 slots of 256 bytes
+  ssdv_Queue = xQueueCreate(10, 256);
+  if (ssdv_Queue == NULL)
+  {
+    Serial.println("Error creating the SSDV queue");
+  }
+  else
+  {
+     // Start the SSDV queue uploader task on core 0
+    xTaskCreatePinnedToCore
+    (
+		   uploadSSDV, /* Function to implement the task */
+		  "task_UploadSSDV", /* Name of the task */
+			10000, /* Stack size in words */
+			NULL, /* Task input parameter */
+			0, /* Priority of the task */
+			&task_UploadSSDV, /* Task handle. */
+			0 /* Core where the task should run */
+    );  
+  }
+
+
 #if defined(USE_SSD1306)
   // Setup the SSD1306 display if there is any
   setupSSD1306();
 #endif
+
+
   setupLoRa();
   setupWifi();
   updateTime();
@@ -197,7 +298,10 @@ void setup()
 void loop() 
 {
   // Process received LoRa packets
-  receiveLoRa();
+  if (receivedFlag)
+  {
+    receiveLoRa();
+  }
   
 #if defined(USE_GPS)  
   // Poll the GPS
@@ -205,12 +309,26 @@ void loop()
 #endif  
 
 #if defined(USE_SSD1306)  
-  // Update the OLED if necessary
-  timedOledUpdate();
+  displayUpdate();
+  // disable the inverted display after 250ms
+  /*
+  if (millis() > (flashMillis + 175) )
+  {
+    disableFlash();
+  }
+
+  if ((millis() > oledLastUpdated + 1000) && (millis() > (flashMillis + 175)))
+  {
+    // Update the OLED if necessary
+    displayUpdate(); 
+    timedOledUpdate();
+    oledLastUpdated = millis();
+  }
+*/
 #endif  
 
   // Keep track of the time for re-uploading your position
-  if (millis()-timeCounter > 600000ul) 
+  if (millis()-timeCounter > 1800000ul) 
   {
     uploader_position_sent = false;
     timeCounter = millis();

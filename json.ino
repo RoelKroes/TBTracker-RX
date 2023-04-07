@@ -109,20 +109,69 @@ void postStationToServer()
 
 }
 
+
 /************************************************************************************
-// Post the telemetry data to the SondeHub server
+// Get SSDV records from the upload queue and post the SSDV data to the SondeHub server
 ************************************************************************************/
-void postDataToServer() 
+void postSSDVToServer()
 {
- 
+
   if (WiFi.status() == WL_CONNECTED)
   {
-    HTTPClient https;   
-     
-    https.begin(JSON_URL);  
-    https.addHeader("Content-Type", "application/json");         
-    https.addHeader("accept", "text/plain");
-     
+    char packetBuf[256]; // Contains the hex encoded packet
+    char base64_data[512];
+    size_t base64_length;
+
+    // Get a SSDV packet from the queue
+    if( xQueueReceive( ssdv_Queue,
+                       packetBuf,
+                      ( TickType_t ) 1) == pdPASS )
+    {
+      HTTPClient https;   
+      // packetBuf now contains a copy of the first item in the queue
+      // Add the http headers
+      https.begin("http://ssdv.habhub.org/api/v0/packets");  
+      https.addHeader("Content-Type", "application/json");  
+      https.addHeader("Accept", "application/json");
+      https.addHeader("charsets", "utf-8");
+    
+      // code the packet into base64
+      base64_encode(packetBuf, 256, &base64_length, base64_data);
+      base64_data[base64_length] = '\0';
+
+      DynamicJsonDocument doc(1024);
+      // Add values in the document
+      doc["type"] = "packet";
+      doc["packet"] = base64_data;
+      doc["encoding"] = "base64";
+      doc["received"] = "2023-03-17";
+      doc["receiver"] = CALLSIGN;
+    
+      String json;
+      serializeJson(doc, json);
+      Serial.println();
+      Serial.print(F("JSON length SSDV: ")); Serial.println(json.length());
+      
+      int httpResponseCode = https.POST(json);
+    
+      // Print the results to the Serial console
+      if(httpResponseCode <= 0)
+      {
+        Serial.printf("Error code: %d\n",httpResponseCode);
+        Serial.printf("Error occurred while sending HTTP POST: %s\n", https.errorToString(httpResponseCode).c_str());  
+      }
+      // cleanup
+      https.end();
+    }
+  }
+}
+
+
+/************************************************************************************
+// Post the telemetry data to the SondeHub upload queue 
+************************************************************************************/
+void putTelemetryinQueue() 
+{     
     DynamicJsonDocument doc(1024);
     // Add values in the document
     
@@ -172,27 +221,76 @@ void postDataToServer()
     String json;
     serializeJson(doc, json);
     json = "[" + json + "]";
-    Serial.println();
-    Serial.print(F("JSON length: ")); Serial.println(json.length());
-
-    int httpResponseCode = https.PUT(json);
-    
-    // Print the results to the Serial console
-    if(httpResponseCode>0)
+   
+    // JSON is ready here
+    // Put it in the Telemetry queue
+    char jbuf[1024];
+    json.toCharArray(jbuf,json.length()+1);
+    // Add the packet to the queue. do not wait if thge queue is full
+    if (telemetry_Queue != NULL)
     {
-       
-      String response = https.getString();                       
-      Serial.print(httpResponseCode); Serial.print(" - ");
-      Serial.println(response); 
-      Telemetry.uploadResult =  response;
+       if (xQueueSend(telemetry_Queue, jbuf, 0) == pdPASS)
+       { 
+         Telemetry.uploadResult = "Telemetry packet added to upload queue.";
+       }
+       else
+       {
+         Telemetry.uploadResult = "Could not upload telemetry. Queue is full.";
+       }
     }
-    else 
-    { 
-      Serial.printf("Error code: %d\n",httpResponseCode);
-      Serial.printf("Error occurred while sending HTTP POST: %s\n", https.errorToString(httpResponseCode).c_str());  
-      Telemetry.uploadResult = https.errorToString(httpResponseCode);
-    }
+}
+
+
+/************************************************************************************
+// Retrieve a record from the telemetry queue and upload to Sondehub
+************************************************************************************/
+void postTelemetryToServer() 
+{
+ 
+  if (WiFi.status() == WL_CONNECTED)
+  {     
+    String json;
+
+    // Get a record from the telemetry queue
+    char jbuf[1024];
+    // Get a SSDV packet from the queue
+    if( xQueueReceive( telemetry_Queue,
+                       jbuf,
+                      ( TickType_t ) 1) == pdPASS )
+    {
+      HTTPClient https;   
+     
+      https.begin(JSON_URL);  
+      https.addHeader("Content-Type", "application/json");         
+      https.addHeader("accept", "text/plain");
+      
+      json = jbuf;
+      Serial.println();
+      Serial.print(F("JSON length: ")); Serial.println(json.length());
+
+      int httpResponseCode = https.PUT(json);
     
-    https.end();
+      // Print the results to the Serial console
+      if(httpResponseCode>0)
+      {
+       
+        String response = https.getString();                       
+        Serial.print("Upload result: ");
+        Serial.print(httpResponseCode); Serial.print(" - ");
+        Serial.println(response); 
+        // Telemetry.uploadResult =  response;
+      }
+      else 
+      {   
+        Serial.printf("Error code: %d\n",httpResponseCode);
+        Serial.printf("Error occurred while sending HTTP POST: %s\n", https.errorToString(httpResponseCode).c_str());  
+        // Telemetry.uploadResult = https.errorToString(httpResponseCode);
+      }
+      https.end();
+    }
   }
 }
+
+
+
+

@@ -2,17 +2,21 @@
 * Experimental functions to decode LoRa-APRS 
 ************************************************************************************/
 
-void parseAPRSPacket(String message)
+void parseAPRSPacket(byte *buf)
 {
   String gps_Lat;
   String gps_Long;
   String gps_Alt;
+  String message((char *) buf);
+  
+  packetCounter++;   
+  Telemetry.raw = "LoRa-APRS packet";
 
   // Get the source of the APRS packet
   int pos_Src = message.indexOf('>');
   if (pos_Src >= 0)
   {
-    Telemetry.payload_callsign = message.substring(0, pos_Src);
+    Telemetry.payload_callsign = message.substring(3, pos_Src);
     Serial.print(F("APRS source:\t")); Serial.println(Telemetry.payload_callsign);
   }
 
@@ -66,6 +70,8 @@ void parseAPRSPacket(String message)
   
   // Update the SSD1306 display
 #if defined(USE_SSD1306)
-   displayUpdate(); 
-#endif       
+   // displayUpdate(); 
+   oledUpdateNeeded = true;
+#endif   
+
 }

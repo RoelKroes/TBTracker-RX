@@ -74,7 +74,7 @@
   void flashPin()
   {
       digitalWrite(FLASH_PIN, HIGH); 
-      delay(300);
+      delay(150);
       digitalWrite(FLASH_PIN, LOW); 
   }
 #endif

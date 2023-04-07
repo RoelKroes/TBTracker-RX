@@ -10,9 +10,6 @@
 // Pin numbers are defined in the settings file
 SX1278 radio = new Module(PIN_NSS, PIN_DIO0, PIN_RESET, PIN_DIO1);
 
-// flag to indicate that a packet was received
-volatile bool receivedFlag = false;
-
 // disable interrupt when it's not needed
 volatile bool enableInterrupt = true;
 
@@ -20,8 +17,14 @@ volatile bool enableInterrupt = true;
   ICACHE_RAM_ATTR
 #endif
 
-// MAX possible length for a packet
-#define PACKETLEN 255
+uint8_t rawChar[PACKETLEN];
+
+// Define the different packettypes
+#define PACKETTYPE_SSDV 1
+#define PACKETTYPE_TELEMETRY 2
+#define PACKETTYPE_APRS 3
+#define PACKETTYPE_UNKNOWN 99
+
 
 /************************************************************************************
 * Setup the Radio
@@ -38,36 +41,45 @@ void setupLoRa()
   // 3 = (normal for fast SSDV)      Explicit mode, Error coding 4:6, Bandwidth 250kHz,   SF 7, Low data rate optimize off
   // 5 = (normal for calling mode)   Explicit mode, Error coding 4:8, Bandwidth 41.7kHz, SF 11, Low data rate optimize off
   // 99 = (LoRa APRS)                Explicit mode, Error coding 4:5, Bandwidth 125KHz,  SF 12 (experimental) - Only receiving, no igating, no uploading, experimental
+  
+  int16_t state = radio.begin();
+  
   switch (LoRaSettings.LoRaMode)
   {
     case 0: 
       LoRaSettings.CodeRate = 8;
       LoRaSettings.Bandwidth = 20.8;
       LoRaSettings.SpreadFactor = 11;
+      LoRaSettings.SyncWord = 0x12;
       break;   
 
     case 1:
       LoRaSettings.CodeRate = 5;
       LoRaSettings.Bandwidth = 20.8;      
-      LoRaSettings.SpreadFactor = 6;      
+      LoRaSettings.SpreadFactor = 6;    
+      LoRaSettings.SyncWord = 0x12;  
+      LoRaSettings.implicitHeader = 255;
     break;   
     
     case 2:
       LoRaSettings.CodeRate = 8;
       LoRaSettings.Bandwidth = 62.5;      
-      LoRaSettings.SpreadFactor = 8;      
+      LoRaSettings.SpreadFactor = 8;  
+      LoRaSettings.SyncWord = 0x12;    
       break;   
 
     case 3:
       LoRaSettings.CodeRate = 6;
       LoRaSettings.Bandwidth = 250;      
-      LoRaSettings.SpreadFactor = 7;            
+      LoRaSettings.SpreadFactor = 7;  
+      LoRaSettings.SyncWord = 0x12;          
       break;   
 
     case 5:
       LoRaSettings.CodeRate = 8;
       LoRaSettings.Bandwidth = 41.7;      
-      LoRaSettings.SpreadFactor = 11;            
+      LoRaSettings.SpreadFactor = 11; 
+      LoRaSettings.SyncWord = 0x12;           
     break;  
 
     case 99:
@@ -75,54 +87,45 @@ void setupLoRa()
       // Frequency should be set to 433.775 in settings.h 
       LoRaSettings.CodeRate = 5;
       LoRaSettings.Bandwidth = 125;      
-      LoRaSettings.SpreadFactor = 12;            
+      LoRaSettings.SpreadFactor = 12; 
+      LoRaSettings.SyncWord = 0x12;           
     break;
   }
-  
-  int16_t state = radio.begin
-  (
-    LoRaSettings.Frequency,
-    LoRaSettings.Bandwidth,
-    LoRaSettings.SpreadFactor,
-    LoRaSettings.CodeRate,
-    LoRaSettings.SyncWord,
-    LoRaSettings.Power,
-    LoRaSettings.PreambleLength, 
-    LoRaSettings.Gain
-  );
 
-  // set the function that will be called
-  // when a new packet is received
-  radio.setDio0Action(setFlag);
+  // Set the radio to the correct settings  
+  radio.setFrequency(LoRaSettings.Frequency);
+  radio.setBandwidth(LoRaSettings.Bandwidth);
+  radio.setSpreadingFactor(LoRaSettings.SpreadFactor);
+  radio.setCodingRate(LoRaSettings.CodeRate);
+  radio.setSyncWord(LoRaSettings.SyncWord);
 
+  // Set the radio to LoRa mode specific settings
   // Add some extra radio parameters
   switch (LoRaSettings.LoRaMode)
   {
    case 0:
       // Low Data Rate Optimization 
       radio.forceLDRO(true);
+      radio.explicitHeader();
+      radio.setDio0Action(setFlag);
+      state = radio.startReceive();
    break; 
    case 1:
       // Mode 1 needs an implicit header with data length defined in advance 
-      radio.implicitHeader(PACKETLEN);
+      radio.implicitHeader(LoRaSettings.implicitHeader);
       radio.setCRC(true);
+      radio.autoLDRO();
+      radio.setDio0Action(setFlag);
+      state = radio.startReceive(LoRaSettings.implicitHeader);
    break;  
    default:
       radio.explicitHeader();
+      radio.autoLDRO();
+      radio.setDio0Action(setFlag);
+      state = radio.startReceive();
    break;
   }
 
-  // start listening for LoRa packets
-  if (LoRaSettings.LoRaMode==1)
-  {
-    // Listen for mode 1 packets  
-    state = radio.startReceive(PACKETLEN);
-  }
-  else
-  {
-    state = radio.startReceive();
-  }
-  
   if (state == RADIOLIB_ERR_NONE) 
   {
     Serial.println(F("success!"));
@@ -143,11 +146,6 @@ void setupLoRa()
 ************************************************************************************/
 void setFlag(void) 
 {
-  // check if the interrupt is enabled
-  if(!enableInterrupt) 
-  {
-    return;
-  }
   // we got a packet, set the flag
   receivedFlag = true;
 }
@@ -158,32 +156,44 @@ void setFlag(void)
 ************************************************************************************/
 void receiveLoRa()
 {
-  // check if the flag is set
-  if(receivedFlag) 
-  {
-    // disable the interrupt service routine while
-    // processing the data
-    enableInterrupt = false;
-    // reset flag
+    // reset the data received flag
     receivedFlag = false;
 
     // Read data from the radio
     int state;
-    
+
+    // Buffer to hold the received data from the radio
+    byte buf[PACKETLEN];
+    // Init the buffer to zeros
+    // memset(buf,0x00,sizeof(buf));
+        
     // Get the received packet length
     Telemetry.rxPacketLen = radio.getPacketLength();
 
     switch(LoRaSettings.LoRaMode)
     {
-       case 1: 
-          radio.readData(Telemetry.raw,PACKETLEN);
+       case 1:  // Implicit header, so tell the radio how many bytes to read
+          state = radio.readData(buf,LoRaSettings.implicitHeader);
+       break;
+       default: 
+          state = radio.readData(buf,0);
       break;
-       default: radio.readData(Telemetry.raw); break;
     }
     
     if (state == RADIOLIB_ERR_NONE) 
     {
-
+      // A LoRa packet was successfully received
+      // Now process it.
+      // 1. Get as much metadata from the radio as possible      
+      Serial.println();
+      
+      // Print the first 10 hex chars of the packet
+      Serial.print("[RADIO] first 10 hex chars:\t");
+      for (int i = 0; i < 10; i++)
+      {
+        Serial.print(buf[i],HEX);
+        Serial.print(" ");
+      }
       Serial.println();
 
       // Get the time from the ESP, so we have a timestamp
@@ -195,14 +205,14 @@ void receiveLoRa()
       Serial.println(Telemetry.time_received);
      
       // Length of the latest packet that was received
-       Serial.print(F("[RADIO] Packet length:\t\t"));
-       Serial.println(Telemetry.rxPacketLen);
+      Serial.print(F("[RADIO] Packet length:\t\t"));
+      Serial.println(Telemetry.rxPacketLen);
 
       // print RSSI (Received Signal Strength Indicator)
-       Serial.print(F("[RADIO] RSSI:\t\t\t"));
-       Telemetry.rssi = radio.getRSSI();
-       Serial.print(Telemetry.rssi);
-       Serial.println(F(" dBm"));
+      Serial.print(F("[RADIO] RSSI:\t\t\t"));
+      Telemetry.rssi = radio.getRSSI();
+      Serial.print(Telemetry.rssi);
+      Serial.println(F(" dBm"));
 
       // print SNR (Signal-to-Noise Ratio)
       Serial.print(F("[RADIO] SNR:\t\t\t"));
@@ -215,42 +225,64 @@ void receiveLoRa()
       Telemetry.frequency_error = radio.getFrequencyError();
       Serial.print(Telemetry.frequency_error);
       Serial.println(F(" Hz (Radio will be retuned)"));
-      Serial.println();
       LoRaSettings.Frequency = LoRaSettings.Frequency - (Telemetry.frequency_error / 1000000);
       Telemetry.frequency = LoRaSettings.Frequency;
+      radio.setFrequency(LoRaSettings.Frequency);
+   
 
-
-      // packet was successfully received, determine if it is a HAB packet by checking for "$$"
-      // as the first two characters of the LoRa packet the radio received.
-      if ( !checkIfHABPacket())
+      // 2. Check the type of packet
+      // SSDV ?
+      if ( ((buf[0] & 0x7F) == 0x66) || ((buf[0] & 0x7F) == 0x67) ||		// SSDV 
+			     ((buf[0] & 0x7F) == 0x68) || ((buf[0] & 0x7F) == 0x69)
+        )
       {
-        // not a HAB package. display it on the Serial interface for debugging or analyzing
-        Serial.println(Telemetry.raw);
+          LoRaSettings.packetType = PACKETTYPE_SSDV ;
+      }  
+      else if (buf[0] == '$' && buf[1]=='$')  // Telemetry
+      {
+        LoRaSettings.packetType = PACKETTYPE_TELEMETRY ;
+      }
+      else if (buf[0] == '<' && buf[1] == 0xff && buf[2] == 0x01) // APRS
+      {
+        LoRaSettings.packetType = PACKETTYPE_APRS ;
       }
       else
-      { 
-        // Valid telemetry packet!  
-        packetCounter++;   
-        if (LoRaSettings.LoRaMode < 99)
-        {
-          // Parse the RAW payload data, create a JSON and post it to SondeHub
-          getMetafromRaw(Telemetry.raw);
-          parseRawData(Telemetry.raw);
-        }
-        else
-        {
-          // Valid APRS packet
-          parseAPRSPacket(Telemetry.raw.substring(3));
-        }
-        // Add the packet to the log
-        addToLog();
+      {
+        LoRaSettings.packetType = PACKETTYPE_UNKNOWN ; // UNKNOWN OR corrupted
       }
+
+      // Print the packet type
+      Serial.print(F("[RADIO] Packet type:\t\t"));
+      switch (LoRaSettings.packetType)
+      {
+        case PACKETTYPE_SSDV: 
+          Serial.println("SSDV"); 
+          processSSDVPacket(buf);
+          // Put the SSDV packet into the upload queue
+          if (Telemetry.uploadSondehub) postSSDVinQueue(buf);    
+          addToLog();
+        break;
+        case PACKETTYPE_TELEMETRY: 
+          Serial.println("TELEMETRY"); 
+          processTelemetryPacket(buf);
+          addToLog();
+        break;
+        case PACKETTYPE_APRS:
+          Serial.println("LORA-APRS"); 
+          // Valid APRS packet
+          parseAPRSPacket(buf);
+          addToLog();
+        break;
+
+        default: Serial.println("UNKNOWN"); break;
+      }
+
+      Serial.println();
     } 
     else if (state == RADIOLIB_ERR_CRC_MISMATCH) 
     {
       // packet was received, but is malformed
-      Serial.println(F("[RADIO] CRC error!"));
-      Telemetry.raw = "Invalid Packet - CRC Error";
+      Serial.println(F("[RADIO] CRC error - maybe adjust frequency a bit?"));
     } 
     else 
     {
@@ -260,12 +292,65 @@ void receiveLoRa()
       Telemetry.raw = "Invalid Packet";
     }
 
-    setupLoRa();
-    // we're ready to receive more packets,
-    // enable interrupt service routine
-    enableInterrupt = true;
+    if (LoRaSettings.LoRaMode == 1)
+    {
+      radio.startReceive(LoRaSettings.implicitHeader);
+    }
+    else
+    {
+      radio.startReceive();
+    }
+}
+
+
+/************************************************************************************
+* Process a telemetry packet
+************************************************************************************/
+void processTelemetryPacket(byte *buf)
+{
+   bool validPacket = true;
+   int i =0;
+     // Check if it is telemetry whenever the LoRaMode is not APRS
+  if (LoRaSettings.LoRaMode < 99)
+  {  
+    while (i < Telemetry.rxPacketLen-2  && buf[i] != '\n')
+    {
+      if (buf[i] < ' ' || buf[i] > '~')
+      {
+        validPacket = false;
+        Telemetry.raw = "Received a telemetry packet but it is corrupted.";
+        Serial.println(Telemetry.raw);
+      }
+      i++;
+    }
+    if (validPacket)
+    {
+      packetCounter++;   
+      getMetafromRaw((char *) buf);
+      parseRawData((char *) buf);
+    }
+  }
+  else
+  {
+    // APRS telemetry packet
+     // Check if it is a valid LoRa-APRS packet
+     if (buf[0] != '<' || buf[1] != 0xff || buf[2] != 0x01)
+     {
+       // not a LoRa-APRS packet
+       Telemetry.raw = "Received a LoRa-APRS packet but it is not valid";
+     }
+     // Extra check for validity of package: Read until end of package. It should all be printable ASCII
+     for (i=3 ; i < Telemetry.rxPacketLen-1; i++)
+     {
+       if (buf[i] < ' ' || buf[i] > '~' )
+       {
+         Telemetry.raw = "Received a LoRa-APRS packet but it is corrupted.";
+         Serial.println(Telemetry.raw);
+       }
+      }
   }
 }
+
 
 /************************************************************************************
 * Check if received packet is a LoRa HAB packet.

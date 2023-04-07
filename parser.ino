@@ -5,16 +5,17 @@
 /************************************************************************************
  *   Get the last field from the RAW packet and determine if it contains metadata
  *************************************************************************************/
-void getMetafromRaw(String rawData)
+void getMetafromRaw(char *Buf)
 {
+   char Str[PACKETLEN];
    char *token; 
    int counter = 0;
-   char Str[rawData.length()];
    const char *delimiter = ",";
    String lastField;
 
-   // Convert the string to a chararray
-   rawData.toCharArray(Str, rawData.length());
+   // Create a copy of the original string received from the radio
+   memcpy(Str,Buf,PACKETLEN) ;
+
    // Get the CRC, which is the string after the asterisk
    char *dataStr = strtok(Str,"*");
    char *crcStr = strtok(NULL,"*"); 
@@ -45,6 +46,12 @@ void getMetafromRaw(String rawData)
    else
    {
       Telemetry.extraFields = false;
+   }
+
+   if (Telemetry.extraFields)
+   {
+     Serial.print("Meta data detected:\t");
+     Serial.println(Telemetry.lastField);
    }
 }
 
@@ -90,20 +97,20 @@ void getMetafromRaw(String rawData)
 
 * Parse the RAW data received by the radio
 ************************************************************************************/
-void parseRawData(String rawData)
+void parseRawData(char *Buf)
 {
+    char Str[PACKETLEN];
     char *token; 
     int counter = 0;
-    char Str[rawData.length()];
     const char *delimiter = ",";
-    
-    // Convert the string to a chararray
-    rawData.toCharArray(Str, rawData.length());
-    
+
+   // Create a copy of the original string received from the radio
+   memcpy(Str,Buf,PACKETLEN) ;
+        
     // Get the CRC, which is the string after the asterisk
     char *dataStr = strtok(Str,"*");
+    Telemetry.raw = dataStr;
     char *crcStr = strtok(NULL,"*");
-    
     
     // Remove the prefix of $ characters
     while (dataStr[0] == '$')
@@ -220,16 +227,19 @@ void parseRawData(String rawData)
 
     // 4. Update the OLED display
 #if defined(USE_SSD1306)
-   displayUpdate(); 
+    // flash the screen
+    // displayFlash();  
+    //displayUpdate();
+    oledUpdateNeeded = true;
 #endif       
 
    // 5. Flash the flash pin if defined and add to the web log
 #if defined(FLASH_PIN)
-   flashPin();
+   //flashPin();
 #endif  
 
-   // 6. Upload to Sondehub
-    if (Telemetry.uploadSondehub) postDataToServer();    
+   // 6. Upload to the Sondehub upload queue
+   if (Telemetry.uploadSondehub) putTelemetryinQueue();    
 
    // 7. Close the packet with some dashes
    closePacket();
