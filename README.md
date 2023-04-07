@@ -11,6 +11,8 @@ v0.0.9 is the first verstion to support SSDV (tested in LoRa mode 1, no fec pack
 - As updating the OLED display with "time since last packet" and flashing the "flashpin" takes up a lot of processing time, I temporary disabled these features in v0.0.9. Hopefully I find a good solution to make this faster and enable it again in future versions.
 - v0.0.9 is only marginally tested. I would appreciate it if you can give me feedback and testing results
 
+If v0.0.9 is not working to your linking, just revert to v0.0.8.
+
 # Hardware needed
 The sketch is designed to compile in the Arduino IDE and work with a TTGO T-Beam board but it will also work with seperate hardware modules.
 
