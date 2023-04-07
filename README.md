@@ -1,8 +1,15 @@
 # TBTracker-RX
-A cheap, mobile LoRa High Altitude Balloon receiver for Arduino based on esp32 and sx1278 with support for GPS, a web interface and an OLED display. 
+A cheap, mobile LoRa High Altitude Balloon receiver for Arduino based on esp32 and sx1278 with support for GPS, a web interface and an OLED display. As of v0.0.9 it supports ssdv.
 
 TBTracker-RX is a sketch for receiving LoRa transmissions from high altitude balloons. It will receive, decode and upload those transmissions.
 It is designed to upload telemetry data in the correct format to https://amateur.sondehub.org
+
+# Notes about v0.0.9 (pre release)
+v0.0.9 is the first verstion to support SSDV (tested in LoRa mode 1, no fec packets). However there are a few points to consider:
+- As SSDV packets are sent one after another very fast, I had to rewrite a lot of the code to keep up with the received packets. 
+- Packets that need uploading are now sent to a queue and uploaded in a seperate thread on another core of the esp32
+- As updating the OLED display with "time since last packet" and flashing the "flashpin" takes up a lot of processing time, I temporary disabled these features in v0.0.9. Hopefully I find a good solution to make this faster and enable it again in future versions.
+- v0.0.9 is only marginally tested. I would appreciate it if you can give me feedback and testing results
 
 # Hardware needed
 The sketch is designed to compile in the Arduino IDE and work with a TTGO T-Beam board but it will also work with seperate hardware modules.
