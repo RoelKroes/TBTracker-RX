@@ -5,13 +5,13 @@ TBTracker-RX is a sketch for receiving LoRa transmissions from high altitude bal
 It is designed to upload telemetry data in the correct format to https://amateur.sondehub.org
 
 # Notes about v0.0.9 (pre release)
-v0.0.9 is the first verstion to support SSDV (tested in LoRa mode 1, no fec packets). However there are a few points to consider:
+v0.0.9 is the first version to support SSDV (tested in LoRa mode 1, no fec packets). However there are a few points to consider:
 - As SSDV packets are sent one after another very fast, I had to rewrite a lot of the code to keep up with the received packets. 
 - Packets that need uploading are now sent to a queue and uploaded in a seperate thread on another core of the esp32
 - As updating the OLED display with "time since last packet" and flashing the "flashpin" takes up a lot of processing time, I temporary disabled these features in v0.0.9. Hopefully I find a good solution to make this faster and enable it again in future versions.
 - v0.0.9 is only marginally tested. I would appreciate it if you can give me feedback and testing results
 
-If v0.0.9 is not working to your linking, just revert to v0.0.8.
+If v0.0.9 is not working to your liking, just revert to v0.0.8.
 
 # Hardware needed
 The sketch is designed to compile in the Arduino IDE and work with a TTGO T-Beam board but it will also work with seperate hardware modules.
@@ -59,6 +59,13 @@ Compile, upload and run the sketch. Use the Serial Monitor to monitor the softwa
 Just enter the ip-number in a browser and the web interface will show. From the web interface you can change the RX frequency and toggle the option to upload telemetry to Sondehub. The main webpage will autoload every 20 seconds and will show you which direction you need to go if you want to chase your balloon.
 
 # Versions
+v0.0.9:
+v0.0.9 pre-release
+- 03-MAR-2023: Serial port baudrate to 115200
+- 15-MAR-2023: Added support for SSDV
+- 20-MAR-2023: changed uploading part of the code. uploading will now take place from a queue and in a seperate thread
+- 07-APR-2023: disabled temporary OLED flashing, time since last packet on the OLED display and flashing a pin when a new packets is reveived
+
 v0.0.8:
 - 23-FEB-2023: Added support for different visual modes for the OLED (default, all, chase)
 - 24-FEB-2023: Added support for a "FLASH PIN" which will set HIGH for 300ms when a packet is received (new entry in settings file!)
