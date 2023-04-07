@@ -135,6 +135,7 @@
 *
 * Uncomment and change the pin number when you do need a flash pin
 ************************************************************************************/
+// PLEASE NOTE: NOT SUPPORTED AS OF V0.0.9 (hopefully in future versions)
 // #define FLASH_PIN 14
 
 /***********************************************************************************
