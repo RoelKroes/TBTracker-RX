@@ -55,6 +55,7 @@ Some important settings:
 
 # Compile and run
 >> Before you hit the compile button, be sure to select an ESP32 board in the Arduino IDE. Otherwise you will get compile errors! <<
+>> https://docs.espressif.com/projects/arduino-esp32/en/latest/installing.html#installing-using-arduino-ide <<
 
 Compile, upload and run the sketch. Use the Serial Monitor to monitor the software. It will try to connect to one of your specified WiFi networks and show the IP-number it got from DHCP. The IP-number will also show on the OLED display (if you have one of those installed on your board). 
 
