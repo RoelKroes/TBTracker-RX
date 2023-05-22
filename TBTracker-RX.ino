@@ -11,6 +11,7 @@
 *
 * V0.0.10 pre-release
 * 22-May-2023: Architecture changes to minimise the time taken to get the radio listening for the next packet.
+* 22-MAY-2023: Updated for RadioLib 6.0.0 - https://github.com/jgromes/RadioLib/releases/tag/6.0.0
 *
 * v0.0.9 pre-release
 * 03-MAR-2023: Serial port baudrate to 115200

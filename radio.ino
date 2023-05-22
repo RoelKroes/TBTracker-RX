@@ -107,7 +107,7 @@ void setupLoRa()
       // Low Data Rate Optimization 
       radio.forceLDRO(true);
       radio.explicitHeader();
-      radio.setDio0Action(setFlag);
+      radio.setDio0Action(setFlag, RISING);  // As of RadioLib 6.0.0 all methods to attach interrupts no longer have a default level change direction
       state = radio.startReceive();
    break; 
    case 1:
@@ -115,13 +115,13 @@ void setupLoRa()
       radio.implicitHeader(LoRaSettings.implicitHeader);
       radio.setCRC(true);
       radio.autoLDRO();
-      radio.setDio0Action(setFlag);
+      radio.setDio0Action(setFlag, RISING);
       state = radio.startReceive(LoRaSettings.implicitHeader);
    break;  
    default:
       radio.explicitHeader();
       radio.autoLDRO();
-      radio.setDio0Action(setFlag);
+      radio.setDio0Action(setFlag, RISING);
       state = radio.startReceive();
    break;
   }
