@@ -9,6 +9,9 @@
 * 
 * Be sure you run the latest version of the Arduino IDE.
 *
+* V0.0.10 pre-release
+* 22-May-2023: Architecture changes to minimise the time taken to get the radio listening for the next packet.
+*
 * v0.0.9 pre-release
 * 03-MAR-2023: Serial port baudrate to 115200
 * 15-MAR-2023: Added support for SSDV
@@ -72,7 +75,7 @@
 #include "settings.h"
 
 // TBTracker-RX version number
-#define TBTRACKER_VERSION "V0.0.9"
+#define TBTRACKER_VERSION "V0.0.10"
 // MAX possible length for a packet
 #define PACKETLEN 255
 
