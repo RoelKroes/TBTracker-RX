@@ -213,7 +213,6 @@ void setup()
      Serial.println(F("SOFTWARE IS IN DEVELOPMENT MODE, Data will not be shown on Sondehub. Change DEVFLAG in settings.h"));
   }
 
-  
   // Create the Telemetry queue with 3 slots of 10124 bytes
   telemetry_Queue = xQueueCreate(3, 1024);
   if (telemetry_Queue == NULL)
@@ -256,12 +255,10 @@ void setup()
     );  
   }
 
-
 #if defined(USE_SSD1306)
   // Setup the SSD1306 display if there is any
   setupSSD1306();
 #endif
-
 
   setupLoRa();
   setupWifi();
@@ -315,7 +312,7 @@ void loop()
   
 #if defined(USE_GPS)  
   // Poll the GPS, drops back here early if packet recieved
-  smartDelay(10);
+  smartDelay(20);
 
   // Process received LoRa packets
   if (receivedFlag) {
@@ -325,7 +322,7 @@ void loop()
 
 #if defined(FLASH_PIN)
   // disable the LED after Xms
-  // TODO Add check if Pin is on
+  // Takes less than 1ms, so dont bother checking if it is on first
   if (millis() > (pinMillis + 300) ) 
   {
     disablePin();
@@ -339,7 +336,7 @@ void loop()
 
 #if defined(USE_SSD1306)  
   // disable the inverted display after Xms
-  // TODO Add check if display is inverted
+  // Takes less than 1ms, so dont bother checking if it is on first
   if (millis() > (flashMillis + 100) ) 
   {
     disableFlash();

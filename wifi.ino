@@ -15,7 +15,12 @@ WiFiMulti WiFiMulti;
 void setupWifi()
 {
     Serial.println(); Serial.println();
-    
+
+#if defined(USE_SSD1306)
+    displayClear();
+    displayOled(0,0,"Searching for WiFi...");
+#endif
+
     // Set WiFi in Station mode
     WiFi.mode(WIFI_STA);
 
@@ -53,6 +58,7 @@ void setupWifi()
     // Try to connect to the stongest know access point
     Serial.print(F("[WiFi} Connecting to WiFi, please wait."));
 #if defined(USE_SSD1306)
+    displayClear();
     displayOled(0,0,"Connecting to WiFi...");
 #endif
     int loopCounter = 0;
