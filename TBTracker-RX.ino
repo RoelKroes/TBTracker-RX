@@ -12,6 +12,7 @@
 * V0.0.10 pre-release
 * 22-May-2023: Architecture changes to minimise the time taken to get the radio listening for the next packet.
 * 22-MAY-2023: Updated for RadioLib 6.0.0 - https://github.com/jgromes/RadioLib/releases/tag/6.0.0
+* 24-MAY-2023: Re-enabled OLED Flash on Packet Receive
 *
 * v0.0.9 pre-release
 * 03-MAR-2023: Serial port baudrate to 115200
@@ -126,6 +127,8 @@ TaskHandle_t task_UploadTelemetry;   // Uploading the queue with Telemetry packe
 TaskHandle_t task_updateDisplay; // Task for updating the oled display in the background in Core 0
 QueueHandle_t ssdv_Queue;  // queue which will hold the SSDV records to send to the server
 QueueHandle_t telemetry_Queue; // queue which will hold the JSON docs to upload to the Sondehub server
+
+volatile unsigned long start; // various timing measurements
 
 /************************************************************************************
 * Struct and variable which contains the latest telemetry
@@ -301,35 +304,49 @@ void setup()
 ************************************************************************************/
 void loop() 
 {
+
+  Serial.print(">");
+
   // Process received LoRa packets
-  if (receivedFlag)
-  {
+  if (receivedFlag) {
     receiveLoRa();
   }
   
 #if defined(USE_GPS)  
-  // Poll the GPS
-  smartDelay(700);
+  // Poll the GPS, drops back here early if packet recieved
+  smartDelay(10);
+
+  // Process received LoRa packets
+  if (receivedFlag) {
+    receiveLoRa();
+  }
 #endif  
 
 #if defined(USE_SSD1306)  
-  displayUpdate();
-  // disable the inverted display after 250ms
-  /*
-  if (millis() > (flashMillis + 175) )
+  // disable the inverted display after Xms
+  if (millis() > (flashMillis + 100) ) 
   {
     disableFlash();
   }
 
-  if ((millis() > oledLastUpdated + 1000) && (millis() > (flashMillis + 175)))
+  // Process received LoRa packets
+  if (receivedFlag) {
+    receiveLoRa();
+  }
+
+  if (millis() > (oledLastUpdated + 1000) )
   {
     // Update the OLED if necessary
-    displayUpdate(); 
-    timedOledUpdate();
+    displayUpdate(); // 24/05/23 Measured as 27ms on a T-Beam when a display update is needed in OLED_DEFAULT mode
+    //timedOledUpdate();
     oledLastUpdated = millis();
   }
-*/
-#endif  
+
+    // Process received LoRa packets
+  if (receivedFlag) {
+    receiveLoRa();
+  }
+#endif
 
   // Keep track of the time for re-uploading your position
   if (millis()-timeCounter > 1800000ul) 
@@ -339,10 +356,14 @@ void loop()
   }
   
   // Send your position to sondehub if enabled
+  // TODO Move to a parallel task otherwise we may loose packets here
   if (UPLOAD_YOUR_POSITION && !uploader_position_sent)
   {
-    postStationToServer();
+    start = millis();
+    postStationToServer(); // 24/05/23 Measured as 2 to 5 seconds!
     uploader_position_sent = true;
+    Serial.print(F("\nTIME spent in postStationToServer():\t\t"));
+    Serial.println(millis()- start);
   }
 
 }

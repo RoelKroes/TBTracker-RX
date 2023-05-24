@@ -105,6 +105,7 @@ void displayUpdate()
 {
   if (oledUpdateNeeded)
   {
+    start = millis();
     switch (oledMode)
     {
       case OLED_DEFAULT:
@@ -166,6 +167,8 @@ void displayUpdate()
       break; 
     }
     oledUpdateNeeded = false;
+    Serial.print(F("\nTIME spent in displayUpdate():\t\t"));
+    Serial.println(millis()- start);
   } 
 }
 
@@ -174,12 +177,12 @@ void displayUpdate()
 ************************************************************************************/
 void displayFlash()
 {
-  display.clearDisplay();
-  display.setTextColor(WHITE);
-  display.setTextSize(2);
-  display.setCursor(10, 27);
-  display.print("PACKET RX");
-  display.display();
+  //display.clearDisplay();
+  //display.setTextColor(WHITE);
+  //display.setTextSize(2);
+  //display.setCursor(10, 27);
+  //display.print("PACKET RX");
+  //display.display();
   display.invertDisplay(true);
   flashMillis = millis();  
 }

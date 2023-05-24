@@ -275,7 +275,7 @@ void postTelemetryToServer()
       {
        
         String response = https.getString();                       
-        Serial.print("Upload result: ");
+        Serial.print("\nUpload result: ");
         Serial.print(httpResponseCode); Serial.print(" - ");
         Serial.println(response); 
         // Telemetry.uploadResult =  response;

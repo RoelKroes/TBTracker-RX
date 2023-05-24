@@ -148,6 +148,7 @@ void setFlag(void)
 {
   // we got a packet, set the flag
   receivedFlag = true;
+  start = millis();
 }
 
 /************************************************************************************
@@ -160,6 +161,8 @@ void startReceive()
   } else {
     radio.startReceive();
   }
+  Serial.print(F("\nTIME spent not listening:\t\t"));
+  Serial.println(millis()- start);
 }
 
 /************************************************************************************
@@ -178,6 +181,7 @@ void receiveLoRa()
     // Init the buffer to zeros
     // memset(buf,0x00,sizeof(buf));
 
+    // Grab the data from the radio module
     switch(LoRaSettings.LoRaMode)
     {
        case 1:  // Implicit header, so tell the radio how many bytes to read
@@ -205,6 +209,11 @@ void receiveLoRa()
       // Then get back to receiving
       startReceive();
 
+      // Flash the OLED display 
+#if defined(USE_SSD1306)
+      displayFlash();
+#endif  
+          
       // Print lots of data
       Serial.println();
       
@@ -291,7 +300,6 @@ void receiveLoRa()
 
         default: Serial.println("UNKNOWN"); break;
       }
-
       Serial.println();
     } 
     else if (state == RADIOLIB_ERR_CRC_MISMATCH) 
@@ -308,6 +316,9 @@ void receiveLoRa()
       Serial.println(state);
       Telemetry.raw = "Invalid Packet";
     }
+
+    Serial.print(F("\nTIME spent in receiveLoRa():\t\t"));
+    Serial.println(millis()- start);
 }
 
 

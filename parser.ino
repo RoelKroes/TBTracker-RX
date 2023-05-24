@@ -225,15 +225,15 @@ void parseRawData(char *Buf)
     setUploaderPosition();
     setDistanceAndBearing();
 
-    // 4. Update the OLED display
+    // 4. Update the OLED display 
 #if defined(USE_SSD1306)
     // flash the screen
-    // displayFlash();  
-    //displayUpdate();
+    // displayFlash();  // Moved to receiveLoRa so we do it for every packet type
+    //displayUpdate();  // Replaced with timed update trigered by "oledUpdateNeeded"
     oledUpdateNeeded = true;
 #endif       
 
-   // 5. Flash the flash pin if defined and add to the web log
+   // 5. Flash the flash pin if defined
 #if defined(FLASH_PIN)
    //flashPin();
 #endif  
