@@ -334,15 +334,19 @@ void loop()
     receiveLoRa();
   }
 
-  if (millis() > (oledLastUpdated + 1000) )
-  {
-    // Update the OLED if necessary
-    displayUpdate(); // 24/05/23 Measured as 27ms on a T-Beam when a display update is needed in OLED_DEFAULT mode
-    //timedOledUpdate();
-    oledLastUpdated = millis();
-  }
+  // Update the OLED
+  // Includes if (oledUpdateNeeded) check to ensure only completed just after we have received a packet
+  displayUpdate(); // 24/05/23 Measured as 27ms on a T-Beam when a display update is needed in OLED_DEFAULT mode
 
-    // Process received LoRa packets
+// Blocks for around 25ms, so only safe to call just after we have received a packet, at which point it would always
+// show 1s since last packet received - so gives no value, unless we can move to a seperate thread?
+//  if (millis() > (oledLastUpdated + 1000) )
+//  {
+//    timedOledUpdate(); // Takes around 25ms, so only safe to call just after we have received a packet, 
+//    oledLastUpdated = millis();
+//  }
+
+  // Process received LoRa packets
   if (receivedFlag) {
     receiveLoRa();
   }
@@ -356,7 +360,7 @@ void loop()
   }
   
   // Send your position to sondehub if enabled
-  // TODO Move to a parallel task otherwise we may loose packets here
+  // TODO Move to a parallel task otherwise we will loose packets here
   if (UPLOAD_YOUR_POSITION && !uploader_position_sent)
   {
     start = millis();

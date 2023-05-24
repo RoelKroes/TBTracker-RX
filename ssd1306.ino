@@ -58,7 +58,7 @@ void timedOledUpdate()
       display.print(getDuration(Telemetry.atmillis,true));
       display.setCursor(97, 0);
       display.print("#"); display.print(packetCounter);
-      display.display();
+      display.display(); // Takes around 25ms
      break;
    }
 }
