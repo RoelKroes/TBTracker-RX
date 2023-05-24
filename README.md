@@ -66,7 +66,7 @@ Just enter the ip-number in a browser and the web interface will show. From the 
 v0.0.10: pre-release
 - 22-MAY-2023: Architecture changes to minimise the time taken to get the radio listening for the next packet
 - 22-MAY-2023: Updated for RadioLib 6.0.0 - https://github.com/jgromes/RadioLib/releases/tag/6.0.0
-- 24-MAY-2023: Re-enabled OLED Flash on Packet Receive
+- 24-MAY-2023: Re-enabled OLED Flash and Flash Pin on Packet Receive
 
 v0.0.9: pre-release
 - 03-MAR-2023: Serial port baudrate to 115200

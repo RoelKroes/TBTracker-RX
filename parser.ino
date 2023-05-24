@@ -235,7 +235,7 @@ void parseRawData(char *Buf)
 
    // 5. Flash the flash pin if defined
 #if defined(FLASH_PIN)
-   //flashPin();
+   // flashPin();  // Moved to receiveLoRa so we do it for every packet type
 #endif  
 
    // 6. Upload to the Sondehub upload queue

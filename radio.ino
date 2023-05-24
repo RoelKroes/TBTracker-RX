@@ -213,6 +213,11 @@ void receiveLoRa()
 #if defined(USE_SSD1306)
       displayFlash();
 #endif  
+
+    // Flash the LED
+#if defined(FLASH_PIN)
+    flashPin();
+#endif
           
       // Print lots of data
       Serial.println();

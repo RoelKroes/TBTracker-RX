@@ -12,7 +12,7 @@
 * V0.0.10 pre-release
 * 22-May-2023: Architecture changes to minimise the time taken to get the radio listening for the next packet.
 * 22-MAY-2023: Updated for RadioLib 6.0.0 - https://github.com/jgromes/RadioLib/releases/tag/6.0.0
-* 24-MAY-2023: Re-enabled OLED Flash on Packet Receive
+* 24-MAY-2023: Re-enabled OLED Flash and Flash Pin on Packet Receive
 *
 * v0.0.9 pre-release
 * 03-MAR-2023: Serial port baudrate to 115200
@@ -115,8 +115,9 @@ bool devflag;
 // flag to indicate that a packet was received
 volatile bool receivedFlag = false;
 
-// Variable to hold the time that the OLED display was turned inverted
-unsigned long flashMillis;
+// Variable to hold the time that the OLED display was turned inverted / Flash LED was turned on
+unsigned long flashMillis = 0;
+unsigned long pinMillis = 0;
 
 // Variable to hold the time that the OLED was updated
 unsigned long oledLastUpdated=0;
@@ -322,8 +323,23 @@ void loop()
   }
 #endif  
 
+#if defined(FLASH_PIN)
+  // disable the LED after Xms
+  // TODO Add check if Pin is on
+  if (millis() > (pinMillis + 300) ) 
+  {
+    disablePin();
+  }
+
+  // Process received LoRa packets
+  if (receivedFlag) {
+    receiveLoRa();
+  }
+#endif
+
 #if defined(USE_SSD1306)  
   // disable the inverted display after Xms
+  // TODO Add check if display is inverted
   if (millis() > (flashMillis + 100) ) 
   {
     disableFlash();
