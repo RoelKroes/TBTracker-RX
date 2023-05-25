@@ -5,7 +5,7 @@ TBTracker-RX is a sketch for receiving LoRa transmissions from high altitude bal
 It is designed to upload telemetry data in the correct format to https://amateur.sondehub.org
 
 # Notes about v0.0.10 (pre release)
-v0.0.10 is the second version to support SSDV.  It includes some significant enhancements to the processing of packets to stop packets being skipped when the time between a packet finishing and the next one starting is small.  This should allow the re-enabling of other features once tested.
+v0.0.10 is the second version to support SSDV.  It includes some significant enhancements to the processing of packets to stop packets being skipped when the time between a packet finishing and the next one starting is small.  This has allowed the re-enabling of other features but still needs detailed testing.
 
 # Notes about v0.0.9 (pre release)
 v0.0.9 is the first version to support SSDV (tested in LoRa mode 1, no fec packets). However there are a few points to consider:
