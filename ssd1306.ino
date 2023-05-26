@@ -58,7 +58,7 @@ void timedOledUpdate()
       display.print(getDuration(Telemetry.atmillis,true));
       display.setCursor(97, 0);
       display.print("#"); display.print(packetCounter);
-      display.display();
+      display.display(); // Takes around 25ms
      break;
    }
 }
@@ -105,6 +105,7 @@ void displayUpdate()
 {
   if (oledUpdateNeeded)
   {
+    start = millis();
     switch (oledMode)
     {
       case OLED_DEFAULT:
@@ -166,6 +167,8 @@ void displayUpdate()
       break; 
     }
     oledUpdateNeeded = false;
+    Serial.print(F("\nTIME spent in displayUpdate():\t\t"));
+    Serial.println(millis()- start);
   } 
 }
 
@@ -174,12 +177,12 @@ void displayUpdate()
 ************************************************************************************/
 void displayFlash()
 {
-  display.clearDisplay();
-  display.setTextColor(WHITE);
-  display.setTextSize(2);
-  display.setCursor(10, 27);
-  display.print("PACKET RX");
-  display.display();
+  //display.clearDisplay();
+  //display.setTextColor(WHITE);
+  //display.setTextSize(2);
+  //display.setCursor(10, 27);
+  //display.print("PACKET RX");
+  //display.display();
   display.invertDisplay(true);
   flashMillis = millis();  
 }

@@ -111,6 +111,6 @@ float GPSBearing(float lat,float lon,float lat2,float lon2){
 String degToCompass(int num)
 {
   int val=int((num/22.5)+.5);
-  char *arr[] = {"N","NNE","NE","ENE","E","ESE", "SE", "SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"};
+  const char *arr[] = {"N","NNE","NE","ENE","E","ESE", "SE", "SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"};
   return String(arr[(val % 16)]);
 }

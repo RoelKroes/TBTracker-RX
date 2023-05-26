@@ -9,6 +9,11 @@
 * 
 * Be sure you run the latest version of the Arduino IDE.
 *
+* V0.0.10 pre-release
+* 22-May-2023: Architecture changes to minimise the time taken to get the radio listening for the next packet.
+* 22-MAY-2023: Updated for RadioLib 6.0.0 - https://github.com/jgromes/RadioLib/releases/tag/6.0.0
+* 24-MAY-2023: Re-enabled OLED Flash and Flash Pin on Packet Receive
+*
 * v0.0.9 pre-release
 * 03-MAR-2023: Serial port baudrate to 115200
 * 15-MAR-2023: Added support for SSDV
@@ -72,7 +77,7 @@
 #include "settings.h"
 
 // TBTracker-RX version number
-#define TBTRACKER_VERSION "V0.0.9"
+#define TBTRACKER_VERSION "V0.0.10"
 // MAX possible length for a packet
 #define PACKETLEN 255
 
@@ -110,8 +115,9 @@ bool devflag;
 // flag to indicate that a packet was received
 volatile bool receivedFlag = false;
 
-// Variable to hold the time that the OLED display was turned inverted
-unsigned long flashMillis;
+// Variable to hold the time that the OLED display was turned inverted / Flash LED was turned on
+unsigned long flashMillis = 0;
+unsigned long pinMillis = 0;
 
 // Variable to hold the time that the OLED was updated
 unsigned long oledLastUpdated=0;
@@ -122,6 +128,8 @@ TaskHandle_t task_UploadTelemetry;   // Uploading the queue with Telemetry packe
 TaskHandle_t task_updateDisplay; // Task for updating the oled display in the background in Core 0
 QueueHandle_t ssdv_Queue;  // queue which will hold the SSDV records to send to the server
 QueueHandle_t telemetry_Queue; // queue which will hold the JSON docs to upload to the Sondehub server
+
+volatile unsigned long start; // various timing measurements
 
 /************************************************************************************
 * Struct and variable which contains the latest telemetry
@@ -205,7 +213,6 @@ void setup()
      Serial.println(F("SOFTWARE IS IN DEVELOPMENT MODE, Data will not be shown on Sondehub. Change DEVFLAG in settings.h"));
   }
 
-  
   // Create the Telemetry queue with 3 slots of 10124 bytes
   telemetry_Queue = xQueueCreate(3, 1024);
   if (telemetry_Queue == NULL)
@@ -248,12 +255,10 @@ void setup()
     );  
   }
 
-
 #if defined(USE_SSD1306)
   // Setup the SSD1306 display if there is any
   setupSSD1306();
 #endif
-
 
   setupLoRa();
   setupWifi();
@@ -297,35 +302,68 @@ void setup()
 ************************************************************************************/
 void loop() 
 {
+
+  Serial.print(">");
+
   // Process received LoRa packets
-  if (receivedFlag)
-  {
+  if (receivedFlag) {
     receiveLoRa();
   }
   
 #if defined(USE_GPS)  
-  // Poll the GPS
-  smartDelay(700);
+  // Poll the GPS, drops back here early if packet recieved
+  smartDelay(20);
+
+  // Process received LoRa packets
+  if (receivedFlag) {
+    receiveLoRa();
+  }
 #endif  
 
+#if defined(FLASH_PIN)
+  // disable the LED after Xms
+  // Takes less than 1ms, so dont bother checking if it is on first
+  if (millis() > (pinMillis + 300) ) 
+  {
+    disablePin();
+  }
+
+  // Process received LoRa packets
+  if (receivedFlag) {
+    receiveLoRa();
+  }
+#endif
+
 #if defined(USE_SSD1306)  
-  displayUpdate();
-  // disable the inverted display after 250ms
-  /*
-  if (millis() > (flashMillis + 175) )
+  // disable the inverted display after Xms
+  // Takes less than 1ms, so dont bother checking if it is on first
+  if (millis() > (flashMillis + 100) ) 
   {
     disableFlash();
   }
 
-  if ((millis() > oledLastUpdated + 1000) && (millis() > (flashMillis + 175)))
-  {
-    // Update the OLED if necessary
-    displayUpdate(); 
-    timedOledUpdate();
-    oledLastUpdated = millis();
+  // Process received LoRa packets
+  if (receivedFlag) {
+    receiveLoRa();
   }
-*/
-#endif  
+
+  // Update the OLED
+  // Includes if (oledUpdateNeeded) check to ensure only completed just after we have received a packet
+  displayUpdate(); // 24/05/23 Measured as 27ms on a T-Beam when a display update is needed in OLED_DEFAULT mode
+
+// Blocks for around 25ms, so only safe to call just after we have received a packet, at which point it would always
+// show 1s since last packet received - so gives no value, unless we can move to a seperate thread?
+//  if (millis() > (oledLastUpdated + 1000) )
+//  {
+//    timedOledUpdate(); // Takes around 25ms, so only safe to call just after we have received a packet, 
+//    oledLastUpdated = millis();
+//  }
+
+  // Process received LoRa packets
+  if (receivedFlag) {
+    receiveLoRa();
+  }
+#endif
 
   // Keep track of the time for re-uploading your position
   if (millis()-timeCounter > 1800000ul) 
@@ -335,10 +373,14 @@ void loop()
   }
   
   // Send your position to sondehub if enabled
+  // TODO Move to a parallel task otherwise we will loose packets here
   if (UPLOAD_YOUR_POSITION && !uploader_position_sent)
   {
-    postStationToServer();
+    start = millis();
+    postStationToServer(); // 24/05/23 Measured as 2 to 5 seconds!
     uploader_position_sent = true;
+    Serial.print(F("\nTIME spent in postStationToServer():\t\t"));
+    Serial.println(millis()- start);
   }
 
 }

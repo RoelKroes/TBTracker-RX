@@ -107,7 +107,7 @@ void setupLoRa()
       // Low Data Rate Optimization 
       radio.forceLDRO(true);
       radio.explicitHeader();
-      radio.setDio0Action(setFlag);
+      radio.setDio0Action(setFlag, RISING);  // As of RadioLib 6.0.0 all methods to attach interrupts no longer have a default level change direction
       state = radio.startReceive();
    break; 
    case 1:
@@ -115,13 +115,13 @@ void setupLoRa()
       radio.implicitHeader(LoRaSettings.implicitHeader);
       radio.setCRC(true);
       radio.autoLDRO();
-      radio.setDio0Action(setFlag);
+      radio.setDio0Action(setFlag, RISING);
       state = radio.startReceive(LoRaSettings.implicitHeader);
    break;  
    default:
       radio.explicitHeader();
       radio.autoLDRO();
-      radio.setDio0Action(setFlag);
+      radio.setDio0Action(setFlag, RISING);
       state = radio.startReceive();
    break;
   }
@@ -148,8 +148,22 @@ void setFlag(void)
 {
   // we got a packet, set the flag
   receivedFlag = true;
+  start = millis();
 }
 
+/************************************************************************************
+* Start receiving next packet
+************************************************************************************/
+void startReceive()
+{
+  if (LoRaSettings.LoRaMode == 1) {
+    radio.startReceive(LoRaSettings.implicitHeader);
+  } else {
+    radio.startReceive();
+  }
+  Serial.print(F("\nTIME spent not listening:\t\t"));
+  Serial.println(millis()- start);
+}
 
 /************************************************************************************
 * Process a received LoRa packet. 
@@ -166,10 +180,8 @@ void receiveLoRa()
     byte buf[PACKETLEN];
     // Init the buffer to zeros
     // memset(buf,0x00,sizeof(buf));
-        
-    // Get the received packet length
-    Telemetry.rxPacketLen = radio.getPacketLength();
 
+    // Grab the data from the radio module
     switch(LoRaSettings.LoRaMode)
     {
        case 1:  // Implicit header, so tell the radio how many bytes to read
@@ -184,7 +196,30 @@ void receiveLoRa()
     {
       // A LoRa packet was successfully received
       // Now process it.
-      // 1. Get as much metadata from the radio as possible      
+      // 1. Get as much metadata from the radio as possible
+      Telemetry.rxPacketLen = radio.getPacketLength();
+      Telemetry.rssi = radio.getRSSI();
+      Telemetry.snr = radio.getSNR();
+      Telemetry.frequency_error = radio.getFrequencyError();
+
+      // Get the frequency error and retune
+      LoRaSettings.Frequency = LoRaSettings.Frequency - (Telemetry.frequency_error / 1000000);
+      radio.setFrequency(LoRaSettings.Frequency);
+
+      // Then get back to receiving
+      startReceive();
+
+      // Flash the OLED display 
+#if defined(USE_SSD1306)
+      displayFlash();
+#endif  
+
+    // Flash the LED
+#if defined(FLASH_PIN)
+    flashPin();
+#endif
+          
+      // Print lots of data
       Serial.println();
       
       // Print the first 10 hex chars of the packet
@@ -210,26 +245,20 @@ void receiveLoRa()
 
       // print RSSI (Received Signal Strength Indicator)
       Serial.print(F("[RADIO] RSSI:\t\t\t"));
-      Telemetry.rssi = radio.getRSSI();
       Serial.print(Telemetry.rssi);
       Serial.println(F(" dBm"));
 
       // print SNR (Signal-to-Noise Ratio)
       Serial.print(F("[RADIO] SNR:\t\t\t"));
-      Telemetry.snr = radio.getSNR();
       Serial.print(Telemetry.snr);
       Serial.println(F(" dB"));
 
       // print frequency error
       Serial.print(F("[RADIO] Frequency error:\t"));
-      Telemetry.frequency_error = radio.getFrequencyError();
       Serial.print(Telemetry.frequency_error);
-      Serial.println(F(" Hz (Radio will be retuned)"));
-      LoRaSettings.Frequency = LoRaSettings.Frequency - (Telemetry.frequency_error / 1000000);
+      Serial.println(F(" Hz (Radio has been retuned)"));
       Telemetry.frequency = LoRaSettings.Frequency;
-      radio.setFrequency(LoRaSettings.Frequency);
    
-
       // 2. Check the type of packet
       // SSDV ?
       if ( ((buf[0] & 0x7F) == 0x66) || ((buf[0] & 0x7F) == 0x67) ||		// SSDV 
@@ -276,30 +305,25 @@ void receiveLoRa()
 
         default: Serial.println("UNKNOWN"); break;
       }
-
       Serial.println();
     } 
     else if (state == RADIOLIB_ERR_CRC_MISMATCH) 
     {
+      startReceive(); // This packet is a dud, so start listening for the next one
       // packet was received, but is malformed
       Serial.println(F("[RADIO] CRC error - maybe adjust frequency a bit?"));
     } 
     else 
     {
+      startReceive(); // This packet is a dud, so start listening for the next one
       // some other error occurred
       Serial.print(F("[RADIO] Failed, code "));
       Serial.println(state);
       Telemetry.raw = "Invalid Packet";
     }
 
-    if (LoRaSettings.LoRaMode == 1)
-    {
-      radio.startReceive(LoRaSettings.implicitHeader);
-    }
-    else
-    {
-      radio.startReceive();
-    }
+    Serial.print(F("\nTIME spent in receiveLoRa():\t\t"));
+    Serial.println(millis()- start);
 }
 
 

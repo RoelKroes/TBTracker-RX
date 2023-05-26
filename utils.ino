@@ -73,8 +73,16 @@
   ************************************************************************************/
   void flashPin()
   {
-      digitalWrite(FLASH_PIN, HIGH); 
-      delay(150);
+    digitalWrite(FLASH_PIN, HIGH); 
+    pinMillis = millis();  
+  }
+
+  /************************************************************************************
+  * disable the FLASH_PIN
+  ************************************************************************************/
+  void disablePin()
+  {
       digitalWrite(FLASH_PIN, LOW); 
   }
+
 #endif
