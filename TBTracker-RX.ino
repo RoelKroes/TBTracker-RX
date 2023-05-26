@@ -302,9 +302,6 @@ void setup()
 ************************************************************************************/
 void loop() 
 {
-
-  Serial.print(">");
-
   // Process received LoRa packets
   if (receivedFlag) {
     receiveLoRa();
@@ -379,8 +376,8 @@ void loop()
     start = millis();
     postStationToServer(); // 24/05/23 Measured as 2 to 5 seconds!
     uploader_position_sent = true;
-    Serial.print(F("\nTIME spent in postStationToServer():\t\t"));
-    Serial.println(millis()- start);
+    //Serial.print(F("\nTIME spent in postStationToServer():\t\t"));
+    //Serial.println(millis()- start);
   }
 
 }

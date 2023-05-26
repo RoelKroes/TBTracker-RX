@@ -161,8 +161,8 @@ void startReceive()
   } else {
     radio.startReceive();
   }
-  Serial.print(F("\nTIME spent not listening:\t\t"));
-  Serial.println(millis()- start);
+  //Serial.print(F("\nTIME spent not listening:\t\t"));
+  //Serial.println(millis()- start);
 }
 
 /************************************************************************************
@@ -322,8 +322,8 @@ void receiveLoRa()
       Telemetry.raw = "Invalid Packet";
     }
 
-    Serial.print(F("\nTIME spent in receiveLoRa():\t\t"));
-    Serial.println(millis()- start);
+    //Serial.print(F("\nTIME spent in receiveLoRa():\t\t"));
+    //Serial.println(millis()- start);
 }
 
 

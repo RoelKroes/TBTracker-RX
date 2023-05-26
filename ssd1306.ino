@@ -167,8 +167,8 @@ void displayUpdate()
       break; 
     }
     oledUpdateNeeded = false;
-    Serial.print(F("\nTIME spent in displayUpdate():\t\t"));
-    Serial.println(millis()- start);
+    //Serial.print(F("\nTIME spent in displayUpdate():\t\t"));
+    //Serial.println(millis()- start);
   } 
 }
 
