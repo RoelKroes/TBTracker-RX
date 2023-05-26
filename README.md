@@ -7,7 +7,7 @@ It is designed to upload telemetry data in the correct format to https://amateur
 # Notes about v0.0.10 (pre release)
 v0.0.10 is the second version to support SSDV.  It includes some significant enhancements to the processing of packets to stop packets being skipped when the time between a packet finishing and the next one starting is small.  This has allowed the re-enabling of other features but still needs detailed testing.
 
-# Notes about v0.0.9 (pre release)
+# Notes about v0.0.9
 v0.0.9 is the first version to support SSDV (tested in LoRa mode 1, no fec packets). However there are a few points to consider:
 - As SSDV packets are sent one after another very fast, I had to rewrite a lot of the code to keep up with the received packets. 
 - Packets that need uploading are now sent to a queue and uploaded in a seperate thread on another core of the esp32
