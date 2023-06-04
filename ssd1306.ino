@@ -123,6 +123,16 @@ void displayUpdate()
         display.print("    Chase: "); display.println(Telemetry.compass); 
         display.setTextColor(SSD1306_BLACK, SSD1306_WHITE); // Draw 'inverse' text
         display.print("TBTacker-RX "); display.print(TBTRACKER_VERSION);
+
+#if defined(USE_GPS)
+        display.setTextColor(SSD1306_WHITE, SSD1306_BLACK); // Not inverse text
+        display.setCursor(122, 0);
+        if (gps_valid)
+          display.print("G");
+        else
+          display.print("X");
+#endif
+
         display.display();
       break; 
       case OLED_CHASE:
