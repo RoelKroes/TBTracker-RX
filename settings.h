@@ -84,6 +84,9 @@
 #define GPS_RX 34
 #define GPS_TX 12
 #define GPS_BAUD 9600
+// Uncomment to print GPS Debuging info
+//#define GPS_DEBUG
+// GPS on a T-beam can get turned off, use this:  https://github.com/eriktheV-king/TTGO_T-beam_GPS-reset/tree/master to reset if no output
 
 /************************************************************************
 * Parameters for the optional SSD1306 OLED panel which can be mounted

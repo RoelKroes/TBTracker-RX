@@ -17,9 +17,19 @@ static void smartDelay(unsigned long ms)
   unsigned long start = millis();
   do
   {
-    while (Serial2.available())
+    while (Serial2.available() && !receivedFlag)
       gps.encode(Serial2.read());
   } while ((millis() - start < ms) && !receivedFlag);
+
+  // Set gps_valid flag, used to display GPS status on OLED display
+  if (gps.satellites.value() > 3) 
+    gps_valid = true;
+  else
+    gps_valid = false;
+
+#if defined(GPS_DEBUG)
+  Serial.println(gps.charsProcessed() + (String)" GPS chars read, " + gps.passedChecksum() + " valid GPS sentances, " + gps.satellites.value() + " GPS sats.");
+#endif
 }
 
 /************************************************************************************

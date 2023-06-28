@@ -103,6 +103,9 @@ struct tm timeinfo;
 // Keeps track of uploading your position to Sondehub
 bool uploader_position_sent = false;
 
+// Is the local GPS position (of this reciever) valid
+bool gps_valid = false;
+
 // Just a variable to calculate simple time difference
 unsigned long timeCounter = 0;
 
