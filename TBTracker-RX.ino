@@ -77,7 +77,7 @@
 #include "settings.h"
 
 // TBTracker-RX version number
-#define TBTRACKER_VERSION "V0.0.10"
+#define TBTRACKER_VERSION "V0.0.11"
 // MAX possible length for a packet
 #define PACKETLEN 255
 
