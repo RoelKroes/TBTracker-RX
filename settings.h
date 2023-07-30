@@ -141,6 +141,19 @@
 // #define FLASH_PIN 14
 
 /***********************************************************************************
+* THIS SECTION IS NEW AS OF V0.0.11
+* i2c PIN and PMU settings 
+* These are used if you have a Power Management chip present.
+* The PMU chips are usually built in the new T-BEAM v1.1 and v1.2
+*
+* These pins normally need no change
+************************************************************************************/
+//#define I2C_SDA         21
+//#define I2C_SCL         22
+// The middle button of your T-BEAM v1.1 or v1.2
+// #define PMU_IRQ_BTN     38
+
+/***********************************************************************************
 * TIME SETTINGS
 *  
 * Change when needed
