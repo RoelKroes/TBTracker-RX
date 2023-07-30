@@ -5,11 +5,11 @@ TBTracker-RX is a sketch for receiving LoRa transmissions from high altitude bal
 It is designed to upload telemetry data in the correct format to https://amateur.sondehub.org
 
 # Notes about v0.0.11 (latest release, support for T-Beam v1.1 and v1.2 with APX PMU's)
-- Note: XPowersLib needed for this version(install from the library manager)
+- Note: XPowersLib needed for this version (install from the library manager)
 - Added GPS debugging option in settings file (thanks to Kevin Walton)
 - Solved: Packet is uploaded with the wrong LoRa mode text.
 - Compatibility with Radiolib 6.0.1
-- Added support for the APX power management chip which is found in the v1.1 and v1.2 T-BEAMs (Thanks to Terence Theijn)
+- Added support for the APX power management chip which is found in the v1.1 and v1.2 T-BEAMs (thanks to Terence Theijn)
 
 # Hardware needed
 The sketch is designed to compile in the Arduino IDE and work with a TTGO T-Beam board but it will also work with seperate hardware modules.
