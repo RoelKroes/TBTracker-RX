@@ -4,29 +4,18 @@ A cheap, mobile LoRa High Altitude Balloon receiver for Arduino based on esp32 a
 TBTracker-RX is a sketch for receiving LoRa transmissions from high altitude balloons. It will receive, decode and upload those transmissions.
 It is designed to upload telemetry data in the correct format to https://amateur.sondehub.org
 
-# Notes about v0.0.11 (Development release)
+# Notes about v0.0.11 (latest release, support for T-Beam v1.1 and v1.2 with APX PMU's)
+- Note: XPowersLib needed for this version(install from the library manager)
 - Added GPS debugging option in settings file (thanks to Kevin Walton)
-
-# Notes about v0.0.10 (latest release)
-v0.0.10 is the second version to support SSDV. It includes some significant enhancements to the processing of packets to stop packets being skipped when the time between a packet finishing and the next one starting is small.  This has allowed the re-enabling of other features but still needs detailed testing.
-- Architecture changes to minimise the time taken to get the radio listening for the next packet
-- Updated for RadioLib 6.0.0 - https://github.com/jgromes/RadioLib/releases/tag/6.0.0
-- Re-enabled OLED Flash and Flash Pin on Packet Receive
-
-# Notes about v0.0.9
-v0.0.9 is the first version to support SSDV (tested in LoRa mode 1, no fec packets). However there are a few points to consider:
-- As SSDV packets are sent one after another very fast, I had to rewrite a lot of the code to keep up with the received packets. 
-- Packets that need uploading are now sent to a queue and uploaded in a seperate thread on another core of the esp32
-- As updating the OLED display with "time since last packet" and flashing the "flashpin" takes up a lot of processing time, I temporary disabled these features in v0.0.9. Hopefully I find a good solution to make this faster and enable it again in future versions.
-- v0.0.9 is only marginally tested. I would appreciate it if you can give me feedback and testing results
-
-If v0.0.9 / v0.0.10 is not working to your liking, just revert to v0.0.8.
+- Solved: Packet is uploaded with the wrong LoRa mode text.
+- Compatibility with Radiolib 6.0.1
+- Added support for the APX power management chip which is found in the v1.1 and v1.2 T-BEAMs (Thanks to Terence Theijn)
 
 # Hardware needed
 The sketch is designed to compile in the Arduino IDE and work with a TTGO T-Beam board but it will also work with seperate hardware modules.
 
 You will need at least:
-- esp32 based board
+- esp32 based board (T-Beam recommended, but it should work with most esp32 based board)
 - LoRa radio module (SX127x or RFM9x module)
 
 Optional components:
@@ -42,6 +31,7 @@ The sketch uses several libraries. Some will probably already be installed in yo
 - Adafruit_BusIO library (install from the library manager)
 - Radiolib library (install from the library manager)
 - TinyGPSPlus library ((install from the library manager)
+- XPowersLib (needed as of release V0.0.11. Install from the library manager)
 - ESPAsyncWebServer library (download: https://github.com/me-no-dev/ESPAsyncWebServer/archive/master.zip )
 - AsyncTCP library (download: https://github.com/me-no-dev/AsyncTCP/archive/master.zip )
 
@@ -69,12 +59,18 @@ Compile, upload and run the sketch. Use the Serial Monitor to monitor the softwa
 Just enter the ip-number in a browser and the web interface will show. From the web interface you can change the RX frequency and toggle the option to upload telemetry to Sondehub. The main webpage will autoload every 20 seconds and will show you which direction you need to go if you want to chase your balloon.
 
 # Versions
-v0.0.10: pre-release
+v0.0.11
+- 28-JUN-2023: Added GPS debugging option in settings file
+- 28-JUN-2023: Solved: Packet is uploaded with the wrong LoRa mode text. 
+- 29-JUN-2023: Compatibility with Radiolib 6.0.1 checked
+- 28-JUL-2023: Added support for the APX power management chip which is found in the v1.1 and v1.2 T-BEAMs 
+
+v0.0.10: 
 - 22-MAY-2023: Architecture changes to minimise the time taken to get the radio listening for the next packet
 - 22-MAY-2023: Updated for RadioLib 6.0.0 - https://github.com/jgromes/RadioLib/releases/tag/6.0.0
 - 24-MAY-2023: Re-enabled OLED Flash and Flash Pin on Packet Receive
 
-v0.0.9: pre-release
+v0.0.9: 
 - 03-MAR-2023: Serial port baudrate to 115200
 - 15-MAR-2023: Added support for SSDV
 - 20-MAR-2023: changed uploading part of the code. uploading will now take place from a queue and in a seperate thread
