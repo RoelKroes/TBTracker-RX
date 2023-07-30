@@ -11,6 +11,7 @@ void parseAPRSPacket(byte *buf)
   
   packetCounter++;   
   Telemetry.raw = "LoRa-APRS packet";
+  Serial.println(message);
 
   // Get the source of the APRS packet
   int pos_Src = message.indexOf('>');

@@ -46,7 +46,7 @@ const char index_html[] PROGMEM = R"rawliteral(
 <table class="myTable" border="0" width="100%%" height="50">
   <tbody>
     <tr>
-    <td>Frequency:</td><td>%FREQUENCY%</td>
+    <td>Current frequency:</td><td><B>%FREQUENCY%</B></td>
     <td><form action="/get"><input type="text" name="frequency"><input type="submit" value="change"></form></td> 
     </tr>
     <tr>
@@ -188,6 +188,14 @@ String processor(const String& var)
     return String(Telemetry.frequency_error);
   else if (var == "LORAMODE")
     return String(LoRaSettings.LoRaMode);
+  else if (var == "SCAN1")
+    return String(TBScanner.scanFreq[1],3);    
+  else if (var == "SCAN2")
+    return String(TBScanner.scanFreq[2],3);    
+  else if (var == "SCAN3")
+    return String(TBScanner.scanFreq[3],3);    
+  else if (var == "SCAN4")
+    return String(TBScanner.scanFreq[4],3);    
 
 #if defined(USE_SSD1306)
   else if (var == "OLEDMODE")
@@ -276,6 +284,16 @@ void setupWebserver()
         request->send(200, "text/html", "Development flag was changed.<br><a href=\"/\">Return to Home Page</a>");
     });
 
+    server.on("/getscan", HTTP_GET, [](AsyncWebServerRequest *request)
+    {
+        changeFrequency(request->getParam("scan1")->value(),1);
+        changeFrequency(request->getParam("scan2")->value(),2);
+        changeFrequency(request->getParam("scan3")->value(),3);
+        changeFrequency(request->getParam("scan4")->value(),4);
+        
+        request->send(200, "text/html", "Scanning frequencies were changed.<br><a href=\"/\">Return to Home Page</a>");
+    });
+
     server.on("/get4", HTTP_GET, [](AsyncWebServerRequest *request)
     {
         String lMode;
@@ -330,7 +348,7 @@ void setupWebserver()
       Serial.print("Frequency changed to: ");
       Serial.println(inputMessage); 
       // Try to change the frequency
-      if ( changeFrequency(inputMessage) ) 
+      if ( changeFrequency(inputMessage,0) ) 
       {
          request->send(200, "text/html", "Frequency changed to " + inputMessage + "<br><a href=\"/\">Return to Home Page</a>");
       }

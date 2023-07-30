@@ -51,6 +51,7 @@ void setupLoRa()
       LoRaSettings.Bandwidth = 20.8;
       LoRaSettings.SpreadFactor = 11;
       LoRaSettings.SyncWord = 0x12;
+      LoRaSettings.ModeString = "LoRa Mode 0";
       break;   
 
     case 1:
@@ -59,27 +60,31 @@ void setupLoRa()
       LoRaSettings.SpreadFactor = 6;    
       LoRaSettings.SyncWord = 0x12;  
       LoRaSettings.implicitHeader = 255;
+      LoRaSettings.ModeString = "LoRa Mode 1";
     break;   
     
     case 2:
       LoRaSettings.CodeRate = 8;
       LoRaSettings.Bandwidth = 62.5;      
       LoRaSettings.SpreadFactor = 8;  
-      LoRaSettings.SyncWord = 0x12;    
+      LoRaSettings.SyncWord = 0x12; 
+      LoRaSettings.ModeString = "LoRa Mode 2";   
       break;   
 
     case 3:
       LoRaSettings.CodeRate = 6;
       LoRaSettings.Bandwidth = 250;      
       LoRaSettings.SpreadFactor = 7;  
-      LoRaSettings.SyncWord = 0x12;          
+      LoRaSettings.SyncWord = 0x12;    
+      LoRaSettings.ModeString = "LoRa Mode 3";      
       break;   
 
     case 5:
       LoRaSettings.CodeRate = 8;
       LoRaSettings.Bandwidth = 41.7;      
       LoRaSettings.SpreadFactor = 11; 
-      LoRaSettings.SyncWord = 0x12;           
+      LoRaSettings.SyncWord = 0x12;
+      LoRaSettings.ModeString = "LoRa Mode 5";           
     break;  
 
     case 99:
@@ -88,7 +93,8 @@ void setupLoRa()
       LoRaSettings.CodeRate = 5;
       LoRaSettings.Bandwidth = 125;      
       LoRaSettings.SpreadFactor = 12; 
-      LoRaSettings.SyncWord = 0x12;           
+      LoRaSettings.SyncWord = 0x12;   
+      LoRaSettings.ModeString = "LoRa-APRS";        
     break;
   }
 
@@ -434,20 +440,45 @@ bool checkIfHABPacket()
 }
 
 /************************************************************************************
-* Change the RX frequency.  
+* Change the RX frequency or one of the scanner frequencies
 ************************************************************************************/
-bool changeFrequency(String newFrequency)
+bool changeFrequency(String newFrequency, int nr)
 {
   int str_len = newFrequency.length() + 1;
   char char_array[str_len];
   newFrequency.toCharArray(char_array, str_len);
-  LoRaSettings.Frequency = atof(char_array);
+  TBScanner.scanFreq[nr] = atof(char_array);
+  if (nr == 0)
+  {
+    LoRaSettings.Frequency = TBScanner.scanFreq[0];
+  } 
   setupLoRa();
 #if defined(USE_SSD1306)
   updateOLEDforFrequency();
 #endif
   return true;
 }
+
+/************************************************************************************
+* Change the frequency to the next scan frequencies
+************************************************************************************/
+void nextScanFrequency()
+{
+  // find the next available frequency to scan
+  TBScanner.currentNr++;
+  while (TBScanner.scanFreq[TBScanner.currentNr] == 0.0)
+  {
+    TBScanner.currentNr++;
+    if  (TBScanner.currentNr > TBScanner.maxNr)
+    {
+      TBScanner.currentNr = 0;
+    } 
+  }
+  // Change the frequency
+  LoRaSettings.Frequency = TBScanner.scanFreq[TBScanner.currentNr];
+  setupLoRa();  
+}
+
 
 /************************************************************************************
 * Change LoRa Mode

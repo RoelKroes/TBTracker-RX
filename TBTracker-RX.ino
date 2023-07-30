@@ -9,12 +9,24 @@
 * 
 * Be sure you run the latest version of the Arduino IDE.
 *
-* V0.0.10 pre-release
+* V0.0.11
+* WARNING: THIS VERSION REQUIRES A CHANGE IN YOUR SETTINGS.H file
+* Add this to your settings.h of use the file in the code base:
+* #define I2C_SDA         21
+* #define I2C_SCL         22
+* #define PMU_IRQ_BTN     38 
+*
+* 28-JUN-2023: Added GPS debugging option in settings file
+* 28-JUN-2023: Solved: Packet is uploaded with the wrong LoRa mode text. 
+* 29-JUN-2023: Compatibility with Radiolib 6.0.1 checked
+* 28-JUL-2023: Added support for the APX power management chip which is found in the v1.1 and v1.2 T-BEAMs 
+*
+* V0.0.10 
 * 22-May-2023: Architecture changes to minimise the time taken to get the radio listening for the next packet.
 * 22-MAY-2023: Updated for RadioLib 6.0.0 - https://github.com/jgromes/RadioLib/releases/tag/6.0.0
 * 24-MAY-2023: Re-enabled OLED Flash and Flash Pin on Packet Receive
 *
-* v0.0.9 pre-release
+* v0.0.9 
 * 03-MAR-2023: Serial port baudrate to 115200
 * 15-MAR-2023: Added support for SSDV
 * 20-MAR-2023: changed uploading part of the code. uploading will now take place from a queue and in a seperate thread
@@ -95,7 +107,15 @@ struct TLoRaSettings
   uint8_t Gain;
   size_t implicitHeader = 255;
   uint8_t packetType;
+  String ModeString = "LoRa";
 } LoRaSettings;
+
+struct TTBScanner
+{
+  float scanFreq[5] = {LORA_FREQUENCY,0,0,0,0};
+  int currentNr = 0;
+  int maxNr = 4;
+} TBScanner;
 
 // Struct to hold Time information
 struct tm timeinfo;
@@ -215,6 +235,9 @@ void setup()
   {
      Serial.println(F("SOFTWARE IS IN DEVELOPMENT MODE, Data will not be shown on Sondehub. Change DEVFLAG in settings.h"));
   }
+
+  // Initialize the Power Management chip if present 
+  XPowerInit();
 
   // Create the Telemetry queue with 3 slots of 10124 bytes
   telemetry_Queue = xQueueCreate(3, 1024);
@@ -366,6 +389,7 @@ void loop()
 #endif
 
   // Keep track of the time for re-uploading your position
+  // Update every 30 minutes.
   if (millis()-timeCounter > 1800000ul) 
   {
     uploader_position_sent = false;

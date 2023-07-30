@@ -327,7 +327,12 @@ bool CheckCRC(char *dataStr, char *crcStr)
    crcCalculated[Count++] = '\0';
     
    Serial.print("Telemetry:\t\t"); Serial.println(dataStr);
-   Serial.print("CRC received:\t\t"); Serial.println(crcStr);
+   Serial.print("CRC received:\t\t"); 
+   for (int n=0; n<=3; n++) 
+   { 
+      Serial.print(crcStr[n]);   
+   }
+   Serial.println(); 
    Serial.print("CRC calculated:\t\t"); Serial.print(crcCalculated);
 
    if ((crcCalculated[0] == crcStr[0]) && (crcCalculated[1] == crcStr[1]) && (crcCalculated[2] == crcStr[2]) && (crcCalculated[3] == crcStr[3]) )

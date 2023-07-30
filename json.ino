@@ -189,7 +189,7 @@ void putTelemetryinQueue()
     doc["frequency"] = Telemetry.frequency;
     doc["rssi"] = Telemetry.rssi;
     doc["snr"] = Telemetry.snr;
-    doc["modulation"] = LORA_MODULATION;
+    doc["modulation"] = LoRaSettings.ModeString;
     doc["raw"] = Telemetry.raw;
     doc["uploader_antenna"] = ANTENNA_USED;
     doc["uploader_radio"] = RADIO_USED;
