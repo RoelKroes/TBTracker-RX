@@ -5,9 +5,13 @@
 * to amateur.sondehub.org. The software is designed to run on the esp32 platform. 
 * A TTGO T-Beam would be ideal. It has WiFi connectivity, a simple web interface and support for a OLED display
 * 
-* First adjust the settings in the settings file <<<<<<<<<<<<<<<<<<<<
+* First adjust the settings in the settings file  <<<<<<<<<<<<<<<<<<<<
 * 
 * Be sure you run the latest version of the Arduino IDE.
+*
+* V0.0.12
+* 14-MAY-2024: Solved a bug in uploading your position to sondehub every 30 minutes
+* 15-MAY-2024: Added a button in the webinterface to manually upload your position to sondehub
 *
 * V0.0.11
 * WARNING: THIS VERSION REQUIRES A CHANGE IN YOUR SETTINGS.H file
@@ -89,7 +93,7 @@
 #include "settings.h"
 
 // TBTracker-RX version number
-#define TBTRACKER_VERSION "V0.0.11"
+#define TBTRACKER_VERSION "V0.0.12"
 // MAX possible length for a packet
 #define PACKETLEN 255
 
@@ -153,6 +157,7 @@ QueueHandle_t ssdv_Queue;  // queue which will hold the SSDV records to send to 
 QueueHandle_t telemetry_Queue; // queue which will hold the JSON docs to upload to the Sondehub server
 
 volatile unsigned long start; // various timing measurements
+
 
 /************************************************************************************
 * Struct and variable which contains the latest telemetry
@@ -317,7 +322,9 @@ void setup()
 
 #if defined(USE_GPS)
   // Setup the GPS if there is any 
-  Serial2.begin(GPS_BAUD, SERIAL_8N1, GPS_RX, GPS_TX);   
+  Serial2.begin(GPS_BAUD, SERIAL_8N1, GPS_RX, GPS_TX);  
+  delay(500);
+  smartDelay(5000);
 #endif
 
 }
@@ -400,7 +407,7 @@ void loop()
   // TODO Move to a parallel task otherwise we will loose packets here
   if (UPLOAD_YOUR_POSITION && !uploader_position_sent)
   {
-    start = millis();
+    start = millis();    
     postStationToServer(); // 24/05/23 Measured as 2 to 5 seconds!
     uploader_position_sent = true;
     //Serial.print(F("\nTIME spent in postStationToServer():\t\t"));

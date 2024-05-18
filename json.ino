@@ -59,7 +59,10 @@ void postStationToServer()
   if (WiFi.status() == WL_CONNECTED)
   {
     HTTPClient https;   
-     
+#if defined(USE_GPS)    
+    processGPSData();
+#endif
+
     https.begin(JSON_URL_LISTENERS);  
     https.addHeader("Content-Type", "application/json");         
     https.addHeader("accept", "text/plain");

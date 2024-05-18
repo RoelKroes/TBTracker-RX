@@ -70,7 +70,8 @@ const char index_html[] PROGMEM = R"rawliteral(
     <td>Your callsign:</td><td>%CALLSIGN%</td><td>&nbsp;</td>
     </tr>
     <tr>
-    <td>Your location:</td><td><a href="https:www.google.com/maps/place/%LOCATION%" target="_blank">Google Maps</a></td><td>&nbsp;</td>
+    <td>Your location:</td><td><a href="https:www.google.com/maps/place/%LOCATION%" target="_blank">Google Maps</a></td>
+    <td><form action="/get6"><input type="submit" value="(re)upload your position"></form></td>
     </tr>
     <tr>
     <td>Upload to <a href="https:amateur.sondehub.org/" target="_blank">Sondehub:</a></td><td>%SONDEHUB%</td>
@@ -275,6 +276,13 @@ void setupWebserver()
         request->send(200, "text/html", "Upload to Sondehub was changed.<br><a href=\"/\">Return to Home Page</a>");
     });
 
+    server.on("/get6", HTTP_GET, [](AsyncWebServerRequest *request)
+    {   
+        postStationToServer(); 
+        request->send(200, "text/html", "Your position was uploaded to Sondehub.<br><a href=\"/\">Return to Home Page</a>");
+    });
+
+
     server.on("/get3", HTTP_GET, [](AsyncWebServerRequest *request)
     {
       if (devflag)
@@ -312,6 +320,7 @@ void setupWebserver()
         } 
         request->send(200, "text/html", "LoRa mode was changed.<br><a href=\"/\">Return to Home Page</a>");
     });
+    
 
 #if defined(USE_SSD1306)
     server.on("/get5", HTTP_GET, [](AsyncWebServerRequest *request)
