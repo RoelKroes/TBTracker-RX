@@ -4,12 +4,9 @@ A cheap, mobile LoRa High Altitude Balloon receiver for Arduino based on esp32 a
 TBTracker-RX is a sketch for receiving LoRa transmissions from high altitude balloons. It will receive, decode and upload those transmissions.
 It is designed to upload telemetry data in the correct format to https://amateur.sondehub.org
 
-# Notes about v0.0.11 (latest release, support for T-Beam v1.1 and v1.2 with APX PMU's)
-- Note: XPowersLib needed for this version (install from the library manager)
-- Added GPS debugging option in settings file (thanks to Kevin Walton)
-- Solved: Packet is uploaded with the wrong LoRa mode text.
-- Compatibility with Radiolib 6.0.1
-- Added support for the APX power management chip which is found in the v1.1 and v1.2 T-BEAMs (thanks to Terence Theijn)
+# Notes about v0.0.12 (latest release)
+- Fixed a bug that caused your position wrongly uploaded to Sondehub
+- Added a button to the webinterface for (re)uploading your position manually to improve chasing a balloon.
 
 # Hardware needed
 The sketch is designed to compile in the Arduino IDE and work with a TTGO T-Beam board but it will also work with seperate hardware modules.
@@ -59,6 +56,10 @@ Compile, upload and run the sketch. Use the Serial Monitor to monitor the softwa
 Just enter the ip-number in a browser and the web interface will show. From the web interface you can change the RX frequency and toggle the option to upload telemetry to Sondehub. The main webpage will autoload every 20 seconds and will show you which direction you need to go if you want to chase your balloon.
 
 # Versions
+v0.0.12
+- 14-MAY-2024: Solved a bug in uploading your position to sondehub every 30 minutes
+- 15-MAY-2024: Added a button in the webinterface to manually upload your position to sondehub
+ 
 v0.0.11
 - 28-JUN-2023: Added GPS debugging option in settings file
 - 28-JUN-2023: Solved: Packet is uploaded with the wrong LoRa mode text. 
