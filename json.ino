@@ -5,6 +5,7 @@
 #include <ArduinoJson.h>
 #include <HTTPClient.h>
 #include <WiFiClientSecure.h>
+#include #include "WiFi.h"
 
 /************************************************************************************
 * JSON structure setup for sondehub. 
