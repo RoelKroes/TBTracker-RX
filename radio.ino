@@ -10,9 +10,6 @@
 // Pin numbers are defined in the settings file
 SX1278 radio = new Module(PIN_NSS, PIN_DIO0, PIN_RESET, PIN_DIO1);
 
-// disable interrupt when it's not needed
-volatile bool enableInterrupt = true;
-
 #if defined(ESP8266) || defined(ESP32)
   ICACHE_RAM_ATTR
 #endif
