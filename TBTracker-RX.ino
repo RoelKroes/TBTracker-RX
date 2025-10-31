@@ -9,6 +9,9 @@
 * 
 * Be sure you run the latest version of the Arduino IDE.
 *
+* V0.0.13
+* 31-10-2025:  Sending humidity as "ext_humidity" so it will show up in the grafana dashboard
+*
 * V0.0.12
 * 14-MAY-2024: Solved a bug in uploading your position to sondehub every 30 minutes
 * 15-MAY-2024: Added a button in the webinterface to manually upload your position to sondehub
@@ -93,7 +96,7 @@
 #include "settings.h"
 
 // TBTracker-RX version number
-#define TBTRACKER_VERSION "V0.0.12"
+#define TBTRACKER_VERSION "V0.0.13"
 // MAX possible length for a packet
 #define PACKETLEN 255
 
@@ -415,3 +418,4 @@ void loop()
   }
 
 }
+
