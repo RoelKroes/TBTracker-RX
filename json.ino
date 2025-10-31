@@ -216,7 +216,7 @@ void putTelemetryinQueue()
         if (Telemetry.lastField.indexOf("9") >= 0) doc["batt"] = Telemetry.batt;
         if ( (Telemetry.lastField.indexOf("A") >= 0) || (Telemetry.lastField.indexOf("B") >= 0) ) doc["temp"] = Telemetry.temp;
         if (Telemetry.lastField.indexOf("R") >= 0) doc["pressure"] = Telemetry.pressure;
-        if (Telemetry.lastField.indexOf("S") >= 0) doc["humidity"] = Telemetry.humidity;
+        if (Telemetry.lastField.indexOf("S") >= 0) doc["ext_humidity"] = Telemetry.humidity;
 #if defined(PAYLOAD_COMMENT)    
        doc["comment"] = Telemetry.comment;
 #endif
@@ -294,6 +294,7 @@ void postTelemetryToServer()
     }
   }
 }
+
 
 
 
