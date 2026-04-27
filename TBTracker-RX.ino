@@ -9,6 +9,16 @@
 * 
 * Be sure you run the latest version of the Arduino IDE.
 *
+* V0.1.1
+* 12-APR-2026: Disable Bluetooth on boards that have Bluetooth
+* 12-APR-2026: Replaced the library for the webserver with "ESP Async WebServer" by ESP32Async (remove the old library!)
+* 12-APR-2026: Replaced the library "Async TCP" with "Async TCP" by ESP32Async (Remove the old library!)
+* 18-APR-2026: the code did not fit anymore into the old T-Beam boards with the default partition schemes. 
+* 18-APR-2026: You are now able to set manual SPI params in Settings.h so you can choose one of the "ESP32 DEV" boards and still use your old T-Beam
+* 18-APR-2026: Added a GPS communication check
+* 20-APR-2026: Made AFC flexible. The radio will adjust to the balloon frequency for 1, 2, or 3 minutes before reverting back to initil frequency
+* 20-APR-2026: Added a frequency offset macro, so you can set a certain frequency deviation for your specific RF chip
+
 * V0.0.13
 * 31-10-2025:  Sending humidity as "ext_humidity" so it will show up in the grafana dashboard
 *
@@ -95,8 +105,13 @@
 #include <soc/rtc_cntl_reg.h>
 #include "settings.h"
 
-// TBTracker-RX version number
-#define TBTRACKER_VERSION "V0.0.13"
+#define TBTRACKER_VERSION_MAJOR  0
+#define TBTRACKER_VERSION_MINOR  1
+#define TBTRACKER_VERSION_PATCH  1
+#define TBTRACKER_VERSION_EXTRA  0
+#define TBTRACKER_VERSION "V0.1.1"
+
+
 // MAX possible length for a packet
 #define PACKETLEN 255
 
@@ -161,6 +176,11 @@ QueueHandle_t telemetry_Queue; // queue which will hold the JSON docs to upload 
 
 volatile unsigned long start; // various timing measurements
 
+// Auto frequency control (can be 0,1,2 or 3)
+uint8_t radio_afc = 1;
+// last frequency set by the user
+float initial_Frequency = LORA_FREQUENCY;
+unsigned long AFCCounter = 0;
 
 /************************************************************************************
 * Struct and variable which contains the latest telemetry
@@ -233,25 +253,46 @@ void setup()
   // disable brownout
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); 
 
+    // Setup Serial for debugging
+#if defined(ALLOWDEBUG)
   Serial.begin(115200);
+  unsigned long Serialstart = millis();
+  // The timeout loop
+  while (!Serial && (millis() - Serialstart < 500)) 
+  {
+    delay(10);
+  }
+  if (Serial) 
+  {
+     toSerialConsole(F("Serial console initiated okay.\n"));
+  }
+#endif
   
   // Switching off bluetooth
-  btStop();
+  #if defined(CONFIG_BT_ENABLED)
+    btStop();
+  #endif
+  
+  // Write the version info to the Serial console
+  write_version_info();
 
   devflag = DEVFLAG;
   if (devflag)
   {
-     Serial.println(F("SOFTWARE IS IN DEVELOPMENT MODE, Data will not be shown on Sondehub. Change DEVFLAG in settings.h"));
+     toSerialConsole(F("SOFTWARE IS IN DEVELOPMENT MODE, Data will not be shown on Sondehub. Change DEVFLAG in settings.h\n"));
   }
+
+  // Start the SPI interface
+  SPI.begin(SCK, MISO, MOSI, CS);
 
   // Initialize the Power Management chip if present 
   XPowerInit();
 
-  // Create the Telemetry queue with 3 slots of 10124 bytes
+  // Create the Telemetry queue with 3 slots of 1024 bytes
   telemetry_Queue = xQueueCreate(3, 1024);
   if (telemetry_Queue == NULL)
   {
-    Serial.println("Error creating the telemetry queue");
+    toSerialConsole(F("Error creating the telemetry queue\n"));
   }
   else
   {
@@ -272,7 +313,7 @@ void setup()
   ssdv_Queue = xQueueCreate(10, 256);
   if (ssdv_Queue == NULL)
   {
-    Serial.println("Error creating the SSDV queue");
+    toSerialConsole(F("Error creating the SSDV queue\n"));
   }
   else
   {
@@ -327,9 +368,10 @@ void setup()
   // Setup the GPS if there is any 
   Serial2.begin(GPS_BAUD, SERIAL_8N1, GPS_RX, GPS_TX);  
   delay(500);
-  smartDelay(5000);
+  // Show GPS output on the Serial console
+  GPSCommTest(1000);
+  smartDelay(3000);
 #endif
-
 }
 
 
@@ -406,6 +448,18 @@ void loop()
     timeCounter = millis();
   }
   
+  // Keep track of the AFC.
+  // If AFC is enabled, the LoRa frequency should be reset to the initial value as set by the user
+  if ( (radio_afc > 0) && 
+       (LoRaSettings.Frequency != initial_Frequency  ) &&
+       ( (millis() - AFCCounter) > (radio_afc * 60000) )
+     )     
+  {
+       toSerialConsole("Setting AFC back to initial frequency\n");
+       changeFrequency(initial_Frequency);  
+       AFCCounter = millis();
+  }
+
   // Send your position to sondehub if enabled
   // TODO Move to a parallel task otherwise we will loose packets here
   if (UPLOAD_YOUR_POSITION && !uploader_position_sent)
@@ -413,8 +467,6 @@ void loop()
     start = millis();    
     postStationToServer(); // 24/05/23 Measured as 2 to 5 seconds!
     uploader_position_sent = true;
-    //Serial.print(F("\nTIME spent in postStationToServer():\t\t"));
-    //Serial.println(millis()- start);
   }
 
 }

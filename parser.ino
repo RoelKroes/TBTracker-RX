@@ -50,8 +50,9 @@ void getMetafromRaw(char *Buf)
 
    if (Telemetry.extraFields)
    {
-     Serial.print("Meta data detected:\t");
-     Serial.println(Telemetry.lastField);
+     toSerialConsole(F("Meta data detected:\t"));
+     toSerialConsole(Telemetry.lastField);
+     toSerialConsole(F("\n"));
    }
 }
 
@@ -138,38 +139,44 @@ void parseRawData(char *Buf)
        if (counter == 0)  // payload_callsign
        {
          Telemetry.payload_callsign = token;
-         Serial.println(); Serial.print(F("Payload callsign:\t")); Serial.println(Telemetry.payload_callsign);
+         toSerialConsole(F("\nPayload callsign:\t")); toSerialConsole(Telemetry.payload_callsign);
+         toSerialConsole(F("\n"));
        }
 
        if (counter == 1)  // frame
        {
          Telemetry.frame = atol(token);
-         Serial.print(F("Payload frame:\t\t")); Serial.println(Telemetry.frame);
+         toSerialConsole(F("Payload frame:\t\t")); toSerialConsole(Telemetry.frame);
+         toSerialConsole(F("\n"));
        }
 
        if (counter == 2) // Time
        {
         strftime(Telemetry.datetime,sizeof(Telemetry.datetime),"%Y-%m-%dT",&timeinfo);
         strcat(Telemetry.datetime,token); strcat(Telemetry.datetime,".000000Z");
-        Serial.print(F("Payload time:\t\t")); Serial.println(Telemetry.datetime);
+        toSerialConsole(F("Payload time:\t\t")); toSerialConsole(Telemetry.datetime);
+        toSerialConsole(F("\n"));
        }
 
        if (counter == 3) // Latitude
        {
          Telemetry.lat = atof(token); 
-         Serial.print(F("Latitude:\t\t")); Serial.println(Telemetry.lat,5);
+         toSerialConsole(F("Latitude:\t\t")); toSerialConsole(Telemetry.lat,5);
+         toSerialConsole(F("\n"));
        }
        
        if (counter == 4) // Longitude
        {
          Telemetry.lon = atof(token); 
-         Serial.print(F("Longitude:\t\t")); Serial.println(Telemetry.lon,5);
+         toSerialConsole(F("Longitude:\t\t")); toSerialConsole(Telemetry.lon,5);
+         toSerialConsole(F("\n"));
        }
 
        if (counter == 5) // Altitude
        {
          Telemetry.alt = atof(token); 
-         Serial.print(F("Altitude:\t\t")); Serial.println(Telemetry.alt,0);
+         toSerialConsole(F("Altitude:\t\t")); toSerialConsole(Telemetry.alt,0);
+         toSerialConsole(F("\n"));
        }
 
        // All fields below here are considered metaData are and only sent when defined in the payloaddata
@@ -179,34 +186,41 @@ void parseRawData(char *Buf)
         switch (Telemetry.lastField[counter])
         {
           case '6': Telemetry.sats = atoi(token);
-                    Serial.print(F("Satellites:\t\t"));
-                    Serial.println(Telemetry.sats);
+                    toSerialConsole(F("Satellites:\t\t"));
+                    toSerialConsole(Telemetry.sats);
+                    toSerialConsole(F("\n"));
                     break;
           case '8': Telemetry.heading = atof(token);
-                    Serial.print(F("Heading:\t\t"));
-                    Serial.println(Telemetry.heading,0);
+                    toSerialConsole(F("Heading:\t\t"));
+                    toSerialConsole(Telemetry.heading,0);
+                    toSerialConsole(F("\n"));
                     break;
           case '9': Telemetry.batt = atof(token);
-                    Serial.print(F("Battery voltage:\t"));
-                    Serial.println(Telemetry.batt,2);
+                    toSerialConsole(F("Battery voltage:\t"));
+                    toSerialConsole(Telemetry.batt,2);
+                    toSerialConsole(F("\n"));
                     break;
           case 'A': 
           case 'B': Telemetry.temp = atoi(token);
-                    Serial.print(F("Temperature:\t\t"));
-                    Serial.println(Telemetry.temp);
+                    toSerialConsole(F("Temperature:\t\t"));
+                    toSerialConsole(Telemetry.temp);
+                    toSerialConsole(F("\n"));
                     break;
           case 'R': Telemetry.pressure = atof(token);
-                    Serial.print(F("Pressure (hPa):\t\t"));
-                    Serial.println(Telemetry.pressure,1);
+                    toSerialConsole(F("Pressure (hPa):\t\t"));
+                    toSerialConsole(Telemetry.pressure,1);
+                    toSerialConsole(F("\n"));
                     break;                    
          case 'S': Telemetry.humidity = atof(token);
-                    Serial.print(F("Humidity (%):\t\t"));
-                    Serial.println(Telemetry.humidity,0);
+                    toSerialConsole(F("Humidity (%):\t\t"));
+                    toSerialConsole(Telemetry.humidity,0);
+                    toSerialConsole(F("\n"));
                     break;                    
-          default:  Serial.print(F("Extra field: "));
-                    Serial.print(token);
-                    Serial.print(" ");
-                    Serial.println(Telemetry.lastField[counter]);           
+          default:  toSerialConsole(F("Extra field: "));
+                    toSerialConsole(token);
+                    toSerialConsole(F(" "));
+                    toSerialConsole(Telemetry.lastField[counter]); 
+                    toSerialConsole(F("\n"));
                     break;
         }
       }
@@ -216,12 +230,13 @@ void parseRawData(char *Buf)
 
 #if defined(PAYLOAD_COMMENT)    
     Telemetry.comment = PAYLOAD_COMMENT;
-    Serial.print(F("Comment:\t\t"));
-    Serial.println(Telemetry.comment);
+    toSerialConsole(F("Comment:\t\t"));
+    toSerialConsole(Telemetry.comment);
+    toSerialConsole(F("\n"));
 #endif
 
     // 3. Parse the GPS data or use the position from the Settings file
-    Serial.println();
+    toSerialConsole(F("\n"));
     setUploaderPosition();
     setDistanceAndBearing();
 
@@ -251,9 +266,7 @@ void parseRawData(char *Buf)
 ************************************************************************************/
 void closePacket()
 {
-  Serial.println(F("----------------------------"));  
-  Serial.println();
-  Serial.println();
+  toSerialConsole("----------------------------\n\n\n");  
 }
 
 /************************************************************************************
@@ -264,18 +277,18 @@ void setUploaderPosition()
 #if defined(USE_GPS)    
     processGPSData();
 
-    Serial.println(F("Your position from GPS:"));
-    Serial.print(F("Your GPS latitude:\t")); Serial.println(Telemetry.uploader_position[0],5);
-    Serial.print(F("Your GPS longitude:\t")); Serial.println(Telemetry.uploader_position[1],5);
-    Serial.print(F("Your GPS Altitude:\t")); Serial.println(Telemetry.uploader_position[2],0);
+    toSerialConsole(F("Your position from GPS:\n"));
+    toSerialConsole(F("Your GPS latitude:\t")); toSerialConsole(Telemetry.uploader_position[0],5); toSerialConsole(F("\n"));
+    toSerialConsole(F("Your GPS longitude:\t")); toSerialConsole(Telemetry.uploader_position[1],5); toSerialConsole(F("\n"));
+    toSerialConsole(F("Your GPS Altitude:\t")); toSerialConsole(Telemetry.uploader_position[2],0); toSerialConsole(F("\n"));
 #else
     Telemetry.uploader_position[0] = UPL_LAT;
     Telemetry.uploader_position[1] = UPL_LON;
     Telemetry.uploader_position[2] = UPL_ALT;
-    Serial.println(F("Your position from settings:"));
-    Serial.print(F("Your latitude:\t")); Serial.println(Telemetry.uploader_position[0],5);
-    Serial.print(F("Your longitude:\t")); Serial.println(Telemetry.uploader_position[1],5);
-    Serial.print(F("Your Altitude:\t")); Serial.println(Telemetry.uploader_position[2],0);
+    toSerialConsole(F("Your position from settings:\n"));
+    toSerialConsole(F("Your latitude:\t")); toSerialConsole(Telemetry.uploader_position[0],5); toSerialConsole(F("\n"));
+    toSerialConsole(F("Your longitude:\t")); toSerialConsole(Telemetry.uploader_position[1],5); toSerialConsole(F("\n"));
+    toSerialConsole(F("Your Altitude:\t")); toSerialConsole(Telemetry.uploader_position[2],0); toSerialConsole(F("\n"));
 #endif
 }
 
@@ -286,14 +299,14 @@ void setDistanceAndBearing()
 {
    // Show the distance between the receiver and the balloon
    Telemetry.distance = GPSDistance(Telemetry.uploader_position[0],Telemetry.uploader_position[1],Telemetry.lat,Telemetry.lon);
-   Serial.print(F("Distance (km):\t\t")); Serial.println(Telemetry.distance,2);
+   toSerialConsole(F("Distance (km):\t\t")); toSerialConsole(Telemetry.distance,2); toSerialConsole(F("\n"));
 
    // Show the bearing between the receiver and the balloon
    Telemetry.bearing = GPSBearing(Telemetry.uploader_position[0],Telemetry.uploader_position[1],Telemetry.lat,Telemetry.lon);
 
    // Get the bearing in compass direction
    Telemetry.compass = degToCompass(Telemetry.bearing);
-   Serial.print(F("Bearing (degr.):\t")); Serial.print(Telemetry.bearing,0); Serial.print(" - travel "); Serial.print(Telemetry.compass); Serial.println(" to chase");
+   toSerialConsole(F("Bearing (degr.):\t")); toSerialConsole(Telemetry.bearing,0); toSerialConsole(F(" - travel ")); toSerialConsole(Telemetry.compass); toSerialConsole(F(" to chase\n"));
 }
 
 /************************************************************************************
@@ -326,23 +339,22 @@ bool CheckCRC(char *dataStr, char *crcStr)
    crcCalculated[Count++] = Hex(CRC & 15);
    crcCalculated[Count++] = '\0';
     
-   Serial.print("Telemetry:\t\t"); Serial.println(dataStr);
-   Serial.print("CRC received:\t\t"); 
+   toSerialConsole(F("Telemetry:\t\t")); toSerialConsole(dataStr); toSerialConsole(F("\n"));
+   toSerialConsole(F("CRC received:\t\t")); 
    for (int n=0; n<=3; n++) 
    { 
-      Serial.print(crcStr[n]);   
+      toSerialConsole(crcStr[n]);   
    }
-   Serial.println(); 
-   Serial.print("CRC calculated:\t\t"); Serial.print(crcCalculated);
+   toSerialConsole(F("\nCRC calculated:\t\t")); toSerialConsole(crcCalculated);
 
    if ((crcCalculated[0] == crcStr[0]) && (crcCalculated[1] == crcStr[1]) && (crcCalculated[2] == crcStr[2]) && (crcCalculated[3] == crcStr[3]) )
    {
-     Serial.println(" << CRC OK");
+     toSerialConsole(F(" << CRC OK\n"));
      return true;
    }
    else
    {
-      Serial.println(F(" << CRC NOT CORRECT!"));
+     toSerialConsole(F(" << CRC NOT CORRECT!\n"));
      return false;
    }
 }

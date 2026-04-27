@@ -8,7 +8,14 @@
 * Globals
 ************************************************************************************/
 // Pin numbers are defined in the settings file
+// Create radio modules depending on what RF chip you use
+#if defined(USE_SX127X)
 SX1278 radio = new Module(PIN_NSS, PIN_DIO0, PIN_RESET, PIN_DIO1);
+#else
+#if defined(USE_SX1280PA)
+SX1280 radio = new Module(PIN_NSS, PIN_DIO1, PIN_RESET, PIN_BUSY);
+#endif
+#endif
 
 #if defined(ESP8266) || defined(ESP32)
   ICACHE_RAM_ATTR
@@ -29,7 +36,7 @@ uint8_t rawChar[PACKETLEN];
 void setupLoRa()
 {
   // Initialize the SX1278
-  Serial.print(F("[LoRa] Initializing ... "));
+  toSerialConsole(F("[LoRa] Initializing ... "));
 
   // First setup the mode
   // 0 = (normal for telemetry)      Explicit mode, Error coding 4:8, Bandwidth 20.8kHz, SF 11, Low data rate optimize on 
@@ -39,7 +46,7 @@ void setupLoRa()
   // 5 = (normal for calling mode)   Explicit mode, Error coding 4:8, Bandwidth 41.7kHz, SF 11, Low data rate optimize off
   // 99 = (LoRa APRS)                Explicit mode, Error coding 4:5, Bandwidth 125KHz,  SF 12 (experimental) - Only receiving, no igating, no uploading, experimental
   
-  int16_t state = radio.begin();
+  Radiolib_assert(radio.begin());
   
   switch (LoRaSettings.LoRaMode)
   {
@@ -96,11 +103,11 @@ void setupLoRa()
   }
 
   // Set the radio to the correct settings  
-  radio.setFrequency(LoRaSettings.Frequency);
-  radio.setBandwidth(LoRaSettings.Bandwidth);
-  radio.setSpreadingFactor(LoRaSettings.SpreadFactor);
-  radio.setCodingRate(LoRaSettings.CodeRate);
-  radio.setSyncWord(LoRaSettings.SyncWord);
+  Radiolib_assert(radio.setFrequency(LoRaSettings.Frequency+LORA_FREQ_OFFSET));
+  Radiolib_assert(radio.setBandwidth(LoRaSettings.Bandwidth));
+  Radiolib_assert(radio.setSpreadingFactor(LoRaSettings.SpreadFactor));
+  Radiolib_assert(radio.setCodingRate(LoRaSettings.CodeRate));
+  Radiolib_assert(radio.setSyncWord(LoRaSettings.SyncWord));
 
   // Set the radio to LoRa mode specific settings
   // Add some extra radio parameters
@@ -108,39 +115,30 @@ void setupLoRa()
   {
    case 0:
       // Low Data Rate Optimization 
-      radio.forceLDRO(true);
-      radio.explicitHeader();
+      Radiolib_assert(radio.forceLDRO(true));
+      Radiolib_assert(radio.explicitHeader());
       radio.setDio0Action(setFlag, RISING);  // As of RadioLib 6.0.0 all methods to attach interrupts no longer have a default level change direction
-      state = radio.startReceive();
+      Radiolib_assert(radio.startReceive());
    break; 
    case 1:
       // Mode 1 needs an implicit header with data length defined in advance 
-      radio.implicitHeader(LoRaSettings.implicitHeader);
-      radio.setCRC(true);
-      radio.autoLDRO();
+      Radiolib_assert(radio.implicitHeader(LoRaSettings.implicitHeader));
+      Radiolib_assert(radio.setCRC(true));
+      Radiolib_assert(radio.autoLDRO());
       radio.setDio0Action(setFlag, RISING);
-      state = radio.startReceive(LoRaSettings.implicitHeader);
+      Radiolib_assert(radio.startReceive(LoRaSettings.implicitHeader));
    break;  
    default:
-      radio.explicitHeader();
-      radio.autoLDRO();
+      Radiolib_assert(radio.explicitHeader());
+      Radiolib_assert(radio.autoLDRO());
       radio.setDio0Action(setFlag, RISING);
-      state = radio.startReceive();
+      Radiolib_assert(radio.startReceive());
    break;
   }
 
-  if (state == RADIOLIB_ERR_NONE) 
-  {
-    Serial.println(F("success!"));
-    Serial.print(F("[LoRa] Waiting for packets on: ")); Serial.print(LoRaSettings.Frequency,3); Serial.println(F(" MHz"));
-    Serial.println(F("----------------------------"));
-  } 
-  else 
-  {
-    Serial.print(F("failed, code "));
-    Serial.println(state);
-    while (true);
-  }
+  toSerialConsole(F("success!\n"));
+  toSerialConsole(F("[LoRa] Waiting for packets on: ")); toSerialConsole(LoRaSettings.Frequency,3); toSerialConsole(F(" MHz\n"));
+  toSerialConsole(F("----------------------------\n"));
 }
 
 /************************************************************************************
@@ -160,12 +158,10 @@ void setFlag(void)
 void startReceive()
 {
   if (LoRaSettings.LoRaMode == 1) {
-    radio.startReceive(LoRaSettings.implicitHeader);
+    Radiolib_assert(radio.startReceive(LoRaSettings.implicitHeader));
   } else {
-    radio.startReceive();
+    Radiolib_assert(radio.startReceive());
   }
-  //Serial.print(F("\nTIME spent not listening:\t\t"));
-  //Serial.println(millis()- start);
 }
 
 /************************************************************************************
@@ -205,9 +201,16 @@ void receiveLoRa()
       Telemetry.snr = radio.getSNR();
       Telemetry.frequency_error = radio.getFrequencyError();
 
+      // Reset the AFC counter
+      AFCCounter = millis();
+
       // Get the frequency error and retune
-      LoRaSettings.Frequency = LoRaSettings.Frequency - (Telemetry.frequency_error / 1000000);
-      radio.setFrequency(LoRaSettings.Frequency);
+      // but only do this if AFC is enabled
+      if (radio_afc > 0)
+      {
+        LoRaSettings.Frequency = LoRaSettings.Frequency - (Telemetry.frequency_error / 1000000);
+        Radiolib_assert(radio.setFrequency(LoRaSettings.Frequency+LORA_FREQ_OFFSET));
+      }
 
       // Then get back to receiving
       startReceive();
@@ -223,43 +226,45 @@ void receiveLoRa()
 #endif
           
       // Print lots of data
-      Serial.println();
+      toSerialConsole(F("\n"));
       
       // Print the first 10 hex chars of the packet
-      Serial.print("[RADIO] first 10 hex chars:\t");
+      toSerialConsole(F("[RADIO] first 10 hex chars:\t"));
       for (int i = 0; i < 10; i++)
       {
-        Serial.print(buf[i],HEX);
-        Serial.print(" ");
+        toSerialConsoleHEX(buf[i]);
+        toSerialConsole(F(" "));
       }
-      Serial.println();
+      toSerialConsole(F("\n"));
 
       // Get the time from the ESP, so we have a timestamp
       formatLocalTime();
       Telemetry.atmillis = millis();
 
       // Process datapacket from the radio, print it to the serial port and store it in the telemetry struct
-      Serial.print(F("[RADIO] Received packet:\t"));
-      Serial.println(Telemetry.time_received);
+      toSerialConsole(F("[RADIO] Received packet:\t"));
+      toSerialConsole(Telemetry.time_received);
+      toSerialConsole(F("\n"));
      
       // Length of the latest packet that was received
-      Serial.print(F("[RADIO] Packet length:\t\t"));
-      Serial.println(Telemetry.rxPacketLen);
+      toSerialConsole(F("[RADIO] Packet length:\t\t"));
+      toSerialConsole(Telemetry.rxPacketLen);
+      toSerialConsole(F("\n"));
 
       // print RSSI (Received Signal Strength Indicator)
-      Serial.print(F("[RADIO] RSSI:\t\t\t"));
-      Serial.print(Telemetry.rssi);
-      Serial.println(F(" dBm"));
+      toSerialConsole(F("[RADIO] RSSI:\t\t\t"));
+      toSerialConsole(Telemetry.rssi);
+      toSerialConsole(F(" dBm\n"));
 
       // print SNR (Signal-to-Noise Ratio)
-      Serial.print(F("[RADIO] SNR:\t\t\t"));
-      Serial.print(Telemetry.snr);
-      Serial.println(F(" dB"));
+      toSerialConsole(F("[RADIO] SNR:\t\t\t"));
+      toSerialConsole(Telemetry.snr);
+      toSerialConsole(F(" dB\n"));
 
       // print frequency error
-      Serial.print(F("[RADIO] Frequency error:\t"));
-      Serial.print(Telemetry.frequency_error);
-      Serial.println(F(" Hz (Radio has been retuned)"));
+      toSerialConsole(F("[RADIO] Frequency error:\t"));
+      toSerialConsole(Telemetry.frequency_error);
+      toSerialConsole(F(" Hz \n"));
       Telemetry.frequency = LoRaSettings.Frequency;
    
       // 2. Check the type of packet
@@ -284,49 +289,46 @@ void receiveLoRa()
       }
 
       // Print the packet type
-      Serial.print(F("[RADIO] Packet type:\t\t"));
+      toSerialConsole("[RADIO] Packet type:\t\t");
       switch (LoRaSettings.packetType)
       {
         case PACKETTYPE_SSDV: 
-          Serial.println("SSDV"); 
+          toSerialConsole(F("SSDV\n")); 
           processSSDVPacket(buf);
           // Put the SSDV packet into the upload queue
           if (Telemetry.uploadSondehub) postSSDVinQueue(buf);    
           addToLog();
         break;
         case PACKETTYPE_TELEMETRY: 
-          Serial.println("TELEMETRY"); 
+          toSerialConsole(F("TELEMETRY\n")); 
           processTelemetryPacket(buf);
           addToLog();
         break;
         case PACKETTYPE_APRS:
-          Serial.println("LORA-APRS"); 
+          toSerialConsole(F("LORA-APRS\n")); 
           // Valid APRS packet
           parseAPRSPacket(buf);
           addToLog();
         break;
 
-        default: Serial.println("UNKNOWN"); break;
+        default: toSerialConsole(F("UNKNOWN\n")); break;
       }
-      Serial.println();
+      toSerialConsole(F("\n"));
     } 
     else if (state == RADIOLIB_ERR_CRC_MISMATCH) 
     {
       startReceive(); // This packet is a dud, so start listening for the next one
       // packet was received, but is malformed
-      Serial.println(F("[RADIO] CRC error - maybe adjust frequency a bit?"));
+      toSerialConsole(F("[RADIO] CRC error - maybe adjust frequency a bit?\n"));
     } 
     else 
     {
       startReceive(); // This packet is a dud, so start listening for the next one
       // some other error occurred
-      Serial.print(F("[RADIO] Failed, code "));
-      Serial.println(state);
+      toSerialConsole(F("[RADIO] Failed, code "));
+      toSerialConsole(state); toSerialConsole(F("\n"));
       Telemetry.raw = "Invalid Packet";
     }
-
-    //Serial.print(F("\nTIME spent in receiveLoRa():\t\t"));
-    //Serial.println(millis()- start);
 }
 
 
@@ -346,7 +348,8 @@ void processTelemetryPacket(byte *buf)
       {
         validPacket = false;
         Telemetry.raw = "Received a telemetry packet but it is corrupted.";
-        Serial.println(Telemetry.raw);
+        toSerialConsole(Telemetry.raw);
+        toSerialConsole(F("\n"));
       }
       i++;
     }
@@ -372,7 +375,8 @@ void processTelemetryPacket(byte *buf)
        if (buf[i] < ' ' || buf[i] > '~' )
        {
          Telemetry.raw = "Received a LoRa-APRS packet but it is corrupted.";
-         Serial.println(Telemetry.raw);
+         toSerialConsole(Telemetry.raw);
+         toSerialConsole(F("\n"));
        }
       }
   }
@@ -403,7 +407,7 @@ bool checkIfHABPacket()
     {
       if (Telemetry.raw[i] < ' ' || Telemetry.raw[i] > '~')
       {
-        Serial.println(Telemetry.raw);
+        toSerialConsole(Telemetry.raw); toSerialConsole(F("\n"));
         Telemetry.raw = "Received a packet but it is corrupted.";
         return false;
       }
@@ -426,7 +430,7 @@ bool checkIfHABPacket()
      {
        if (Telemetry.raw[i] < ' ' || Telemetry.raw[i] > '~' )
        {
-         Serial.println(Telemetry.raw);
+         toSerialConsole(Telemetry.raw); toSerialConsole(F("\n"));
          Telemetry.raw = "Received a packet but it is corrupted.";
          return false;
        }
@@ -448,6 +452,9 @@ bool changeFrequency(String newFrequency, int nr)
   if (nr == 0)
   {
     LoRaSettings.Frequency = TBScanner.scanFreq[0];
+    // Also change the initial frequency as set by the user
+    initial_Frequency = LoRaSettings.Frequency;
+    AFCCounter = millis();
   } 
   setupLoRa();
 #if defined(USE_SSD1306)
@@ -456,24 +463,14 @@ bool changeFrequency(String newFrequency, int nr)
   return true;
 }
 
-/************************************************************************************
-* Change the frequency to the next scan frequencies
-************************************************************************************/
-void nextScanFrequency()
+bool changeFrequency(float newFrequency)
 {
-  // find the next available frequency to scan
-  TBScanner.currentNr++;
-  while (TBScanner.scanFreq[TBScanner.currentNr] == 0.0)
-  {
-    TBScanner.currentNr++;
-    if  (TBScanner.currentNr > TBScanner.maxNr)
-    {
-      TBScanner.currentNr = 0;
-    } 
-  }
-  // Change the frequency
-  LoRaSettings.Frequency = TBScanner.scanFreq[TBScanner.currentNr];
-  setupLoRa();  
+   LoRaSettings.Frequency = newFrequency;
+   setupLoRa();
+#if defined(USE_SSD1306)
+  updateOLEDforFrequency();
+#endif
+  return true;
 }
 
 
@@ -494,4 +491,21 @@ bool changeLoRaMode(int newMode)
   }
 }
 
+
+/************************************************************************************
+* Change AFC Mode
+************************************************************************************/
+bool changeradioAFC(int newMode)
+{
+  if (newMode >= 0 && newMode != radio_afc)
+  {
+      radio_afc = newMode;
+      AFCCounter = millis();
+      return true;
+  }
+  else
+  {
+     return false; 
+  }
+}
   

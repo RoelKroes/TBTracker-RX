@@ -34,7 +34,8 @@ struct TSSDVSettings
    Telemetry.raw += " packet ID: ";
    Telemetry.raw += SSDVSettings.packetID;
 
-   Serial.println(Telemetry.raw);
+   toSerialConsole(Telemetry.raw);
+   toSerialConsole(F("\n"));
  }
 
 /***********************************************************************************

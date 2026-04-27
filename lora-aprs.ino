@@ -11,14 +11,14 @@ void parseAPRSPacket(byte *buf)
   
   packetCounter++;   
   Telemetry.raw = "LoRa-APRS packet";
-  Serial.println(message);
+  toSerialConsole(message); toSerialConsole(F("\n"));
 
   // Get the source of the APRS packet
   int pos_Src = message.indexOf('>');
   if (pos_Src >= 0)
   {
     Telemetry.payload_callsign = message.substring(3, pos_Src);
-    Serial.print(F("APRS source:\t")); Serial.println(Telemetry.payload_callsign);
+    toSerialConsole(F("APRS source:\t")); toSerialConsole(Telemetry.payload_callsign); toSerialConsole(F("\n"));
   }
 
   // Get the location of the APRS payload
@@ -33,12 +33,12 @@ void parseAPRSPacket(byte *buf)
     {
       Telemetry.lat = Telemetry.lat*-1;
     }
-    Serial.print("APRS latitude:\t"); Serial.println(Telemetry.lat,5);
-
+    toSerialConsole(F("APRS latitude:\t")); toSerialConsole(Telemetry.lat);toSerialConsole(F("\n"));
+    
     // Get the longitude
     gps_Long = message.substring(pos_Loc+11,pos_Loc+20);
     Telemetry.lon = gps_Long.substring(0,3).toFloat()+(gps_Long.substring(3,8).toFloat() / 60);
-    Serial.print("APRS longitude:\t"); Serial.println(Telemetry.lon,5);
+    toSerialConsole(F("APRS longitude:\t")); toSerialConsole(Telemetry.lon); toSerialConsole(F("\n"));
     if (gps_Long[8] == 'W')
     {
       Telemetry.lon = Telemetry.lon*-1;
@@ -53,7 +53,7 @@ void parseAPRSPacket(byte *buf)
     gps_Alt = message.substring(pos_Alt+3,pos_Alt+9);
     // Convert to meters
     Telemetry.alt = gps_Alt.toFloat() / 3.2808;
-    Serial.print(F("APRS altitude:\t")); Serial.print(Telemetry.alt,0); Serial.println(F(" meter"));
+    toSerialConsole(F("APRS altitude:\t")); toSerialConsole(Telemetry.alt); toSerialConsole(F(" meter\n"));
   }
   else
   {

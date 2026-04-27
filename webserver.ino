@@ -95,6 +95,21 @@ const char index_html[] PROGMEM = R"rawliteral(
     </form>
     </td> 
     </tr>    
+    <tr>
+    <td>Automatic Frequency Control (AFC):</td><td>%AFC%</td>
+    <td>
+    <form action="/get7">
+      <select id="afcmodes" name="afcmodes">
+        <option value="0">&nbsp;</option>
+        <option value="0">Off</option>
+        <option value="1">1 minute</option>
+        <option value="2">2 minutes</option>
+        <option value="3">3 minutes</option>
+      </select>
+      <input type="submit" value="change">
+    </form>
+    </td> 
+    </tr>      
   </tbody>
 </table>
  
@@ -196,7 +211,28 @@ String processor(const String& var)
   else if (var == "SCAN3")
     return String(TBScanner.scanFreq[3],3);    
   else if (var == "SCAN4")
-    return String(TBScanner.scanFreq[4],3);    
+    return String(TBScanner.scanFreq[4],3);  
+  else if (var == "AFC")  
+  {
+    switch (radio_afc)
+    {
+      case 0:
+        return String("Off");
+      break;
+      case 1:
+        return String("Follow for 1 minute");
+      break;
+      case 2:
+        return String("Follow for 2 minutes");
+      break;
+      case 3:
+        return String("Follow for 3 minutes");
+      break;
+      default:
+        return String("Off");
+      break;
+    }
+  }  
 
 #if defined(USE_SSD1306)
   else if (var == "OLEDMODE")
@@ -322,6 +358,27 @@ void setupWebserver()
     });
     
 
+    server.on("/get7", HTTP_GET, [](AsyncWebServerRequest *request)
+    {
+        String lAFC;
+        if (request->hasParam("afcmodes"))
+        {
+          lAFC = request->getParam("afcmodes")->value();
+          if (changeradioAFC(lAFC.toInt()))
+          {
+            request->send(200, "text/html", "AFC control was changed.<br><a href=\"/\">Return to Home Page</a>");
+          }
+          else
+          {
+            request->send(200, "text/html", "AFC control was NOT changed.<br><a href=\"/\">Return to Home Page</a>");
+          }
+          
+        } 
+        request->send(200, "text/html", "AFC control was changed.<br><a href=\"/\">Return to Home Page</a>");
+    });
+
+
+
 #if defined(USE_SSD1306)
     server.on("/get5", HTTP_GET, [](AsyncWebServerRequest *request)
     {
@@ -354,8 +411,9 @@ void setupWebserver()
         inputMessage = request->getParam("frequency")->value();
         inputParam = "frequency";
       }
-      Serial.print("Frequency changed to: ");
-      Serial.println(inputMessage); 
+      toSerialConsole(F("Frequency changed to: "));
+      toSerialConsole(inputMessage); 
+      toSerialConsole(F("\n"));
       // Try to change the frequency
       if ( changeFrequency(inputMessage,0) ) 
       {

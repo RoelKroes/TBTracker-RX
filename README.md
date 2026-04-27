@@ -1,143 +1,193 @@
 # TBTracker-RX
-A cheap, mobile LoRa High Altitude Balloon receiver for Arduino based on esp32 and sx1278 with support for GPS, a web interface and an OLED display. As of v0.0.9 it supports ssdv.
 
-TBTracker-RX is a sketch for receiving LoRa transmissions from high altitude balloons. It will receive, decode and upload those transmissions.
-It is designed to upload telemetry data in the correct format to https://amateur.sondehub.org
+TBTracker-RX is an affordable, mobile LoRa High Altitude Balloon (HAB) receiver for Arduino, based on the ESP32 and SX1278. It features support for GPS, a web interface, and an OLED display. As of version 0.0.9, it also supports SSDV.
 
-# Hardware needed
-The sketch is designed to compile in the Arduino IDE and work with a TTGO T-Beam board but it will also work with seperate hardware modules.
+This sketch is designed to receive, decode, and upload LoRa transmissions from high-altitude balloons. It automatically uploads telemetry data in the correct format to [amateur.sondehub.org](https://amateur.sondehub.org).
 
-You will need at least:
-- esp32 based board (T-Beam recommended, but it should work with most esp32 based board)
-- LoRa radio module (SX127x or RFM9x module)
+## Hardware Needed
 
-Optional components:
-- GPS module (Ublox, ATGM or any compatible module)
-- SSD1306 LCD display (or compatible)
+The sketch is designed to compile in the Arduino IDE and is optimized for the **TTGO T-Beam** board, though it also works with separate hardware modules.
 
-# Libraries needed
-The sketch uses several libraries. Some will probably already be installed in your Arduino IDE but if not, follow the directions below:
+**Minimum requirements:**
 
-- ArduinoJson by Benoit Blanchon (install from the library manager)
-- Adafruit SSD1306 by Adafruit (install from the library manager, with all dependecies)
-- Adafruit GFX library by Adafruit (install from the library manager)
-- Adafruit BusIO by Adafruit (install from the library manager)
-- Radiolib by Jan Gromes (install from the library manager)
-- TinyGPSPlus by Mikal Hart (install from the library manager)
-- XPowersLib by Lewis He (needed as of release V0.0.11. Install from the library manager)
-- ESP Async WebServer by ESP32Async (install from the library manager)
-- Async TCP by ESP32Async (install from the library manager)
+- **ESP32-based dual-core board:** T-Beam is recommended, but most ESP32-based boards should work.
 
-# settings.h
-You will need to change the values in settings.h before you can use the sketch.
-Some important settings:
+- **LoRa radio module:** SX127x or RFM9x module.
 
-- DEVFLAG: Set this to true if you want to test uploading to Sondehub but don't want to store the data in the Sondehub database. The telemetry will not appear on the map. You can still check the Serial Monitor to check the upload status of your data. Recommended for testing.
-- WiFi settings: You can add up to three wifi networks to the sketch. The software will automatically select the strongest network. Good choices are probalby your home network and the hotspot network from you mobile device.
-- CALLSIGN: Change your callsign. It will be shown on sondehub
-- UPL_LAT,UPL_LON,UPL_ALT: change these to your current location. It will be used when the software cannot get a valid GPS position
-- UPLOAD_YOUR_POSITION: if set to true, the software will upload your position periodically to Sondehub, so it will be show on the map.
-- UPLOAD_PAYLOAD_PACKET: if set to true, the software will upload received telemetry to sondehub
-- LORA SETTINGS: Change the frequency and LoRa mode (currently I only tested mode 2)
+**Optional components:**
 
-# Compile and run
->> Before you hit the compile button, be sure to select an ESP32 board in the Arduino IDE. Otherwise you will get compile errors! <<
->> https://docs.espressif.com/projects/arduino-esp32/en/latest/installing.html#installing-using-arduino-ide <<
+- **GPS module:** Ublox, ATGM, or any compatible module.
 
-Compile, upload and run the sketch. Use the Serial Monitor to monitor the software. It will try to connect to one of your specified WiFi networks and show the IP-number it got from DHCP. The IP-number will also show on the OLED display (if you have one of those installed on your board). 
+- **OLED display:** SSD1306 or compatible.
 
-# Using the web interface
-Just enter the ip-number in a browser and the web interface will show. From the web interface you can change the RX frequency and toggle the option to upload telemetry to Sondehub. The main webpage will autoload every 20 seconds and will show you which direction you need to go if you want to chase your balloon.
+## Libraries Needed
 
-# Versions
-v0.0.13
-- 20-02-2026: Changed some code to retain compatibility with all the libraries.
-  
-v0.0.12
-- 14-MAY-2024: Solved a bug in uploading your position to sondehub every 30 minutes
-- 15-MAY-2024: Added a button in the webinterface to manually upload your position to sondehub
- 
-v0.0.11
-- 28-JUN-2023: Added GPS debugging option in settings file
-- 28-JUN-2023: Solved: Packet is uploaded with the wrong LoRa mode text. 
-- 29-JUN-2023: Compatibility with Radiolib 6.0.1 checked
-- 28-JUL-2023: Added support for the APX power management chip which is found in the v1.1 and v1.2 T-BEAMs 
+The sketch uses several libraries. Ensure the following are installed in your Arduino IDE via the Library Manager:
 
-v0.0.10: 
-- 22-MAY-2023: Architecture changes to minimise the time taken to get the radio listening for the next packet
-- 22-MAY-2023: Updated for RadioLib 6.0.0 - https://github.com/jgromes/RadioLib/releases/tag/6.0.0
-- 24-MAY-2023: Re-enabled OLED Flash and Flash Pin on Packet Receive
+- **ArduinoJson** by Benoit Blanchon
 
-v0.0.9: 
-- 03-MAR-2023: Serial port baudrate to 115200
-- 15-MAR-2023: Added support for SSDV
-- 20-MAR-2023: changed uploading part of the code. uploading will now take place from a queue and in a seperate thread
-- 07-APR-2023: disabled temporary OLED flashing, time since last packet on the OLED display and flashing a pin when a new packets is reveived
+- **Adafruit SSD1306** by Adafruit (including all dependencies)
 
-v0.0.8:
-- 23-FEB-2023: Added support for different visual modes for the OLED (default, all, chase)
-- 24-FEB-2023: Added support for a "FLASH PIN" which will set HIGH for 300ms when a packet is received (new entry in settings file!)
- 
- Many thanks to Star Holden, Luc Bodson and Eelco de Graaff for testing and suggesting improvements
+- **Adafruit GFX library** by Adafruit
 
-- Example of the three OLED modes
+- **Adafruit BusIO** by Adafruit
 
-![IMG-6557](https://user-images.githubusercontent.com/58561387/222697528-747ce37b-25bc-49ef-a2cb-feca527335bf.JPG)
-![IMG-6559](https://user-images.githubusercontent.com/58561387/222697536-9b1211c6-e4a5-4414-aa3b-89f98305b998.JPG)
-![IMG-6555](https://user-images.githubusercontent.com/58561387/222697542-d7b8b98e-4abe-41ea-9730-17eccb419490.JPG)
- 
-v0.0.7:
-- 03-FEB-2023: The link to Sondehub in the web interface now opens in a new window
-- 03-FEB-2023: Software now works also without WiFi (data on Serial output or OLED display)
+- **Radiolib** by Jan Gromes
 
-v0.0.6
-- 29-JAN-2023: Added a parser for the APRS packets to display on the Serial interface, webinterface and SSD1306 display
+- **TinyGPSPlus** by Mikal Hart
 
-v0.0.5
-- 21-JAN-2023: Print length of received packet in the Serial monitor
-- 21-JAN-2023: Check if the received packet is indeed a HAB telemetry packet
-- 21-JAN-2023: Removed the RAW telemetry string from the Serial monitor to avoid double info and unreadable characters
-- 21-JAN-2023: Added support for LoRa-APRS packets
-- 21-JAN-2023: Added a packet Log trail in the web interface
+- **XPowersLib** by Lewis He (needed as of release V0.0.11)
 
-v0.0.4:
-- 14-JAN-2023: Added support for LoRa Mode 5 (Explicit mode, Error coding 4:8, Bandwidth 41.7kHz, SF 11, Low data rate optimize off)
-- 14-JAN-2023: Added support for LoRa Mode 3 (Explicit mode, Error coding 4:6, Bandwidth 250kHz,   SF 7, Low data rate optimize off)
-- 20-JAN-2023: Added support for LoRa Mode 0 (Explicit mode, Error coding 4:8, Bandwidth 20.8kHz, SF 11, Low data rate optimize on)
-- 20-JAN-2023: Added support for LoRa Mode 1 (Implicit mode, Error coding 4:5, Bandwidth 20.8kHz,  SF 6, Low data rate optimize off)
-- 20-JAN-2023: Added support for showing and changing the LoRa Mode in the webinterface
-- 20-JAN-2023: Solved several bugs
-- 20-JAN-2023: Added autotune to the radio (based on the frquency error calculated by the radio)
+- **ESP Async WebServer** by ESP32Async
 
-v0.0.3:
-- 06-JAN-2023: Added SNR, RSSI to the web interface
-- 06-JAN-2023: Added time since latest packet to the web interface
-- 06-JAN-2023: Made the Google Maps links open in a new window
-- 06-JAN-2023: Solved several reported bugs / unexpected behaviour
-- 07-JAN-2023: Changed some UI language. (I apologize, English is not my native language)
+- **Async TCP** by ESP32Async
 
-v0.0.2:
-- 23-DEC-2022: Added upload result to the web interface
-- 23-DEC-2022: "comment" string is now disabled by default
-- 23-DEC-2022: Try to determine if the packet received is an actual HAB packet or an invalid or unknown packet
-- 23-DEC-2022: Changed the wording of "Test mode" in the webinterface
- 
-v0.0.1: 
-- 19-DEC-2022: Changed to x.y.z version numbering
-- 19-DEC-2022: Moved version number to TBTracker-rx.ino from settings.h
-- 19-DEC-2022: The OLED display will now show frequency updates
-- 19-DEC-2022: Added a way to change the DEVFLAG in the webinterface 
+## Configuration (settings.h)
 
-v0.1ß:
-- 18-DEC-2022: Initial version, released in the Facebook HAB-NL group
+You must modify the values in `settings.h` before using the sketch. Key settings include:
 
-# Work in progress
-This software is a work in progress. I made it to track my own balloons. Use it at your own risk, there are no guarantees. Let me know if you find it useful or not and as always don't forget to have fun.
+- **Pin Numbers:** You must define the pin numbers used for your specific board.
+
+- **DEVFLAG:** Set this to `true` if you want to test uploading to Sondehub without storing data in their database. The telemetry will not appear on the public map, but you can check the upload status in the Serial Monitor.
+
+- **WiFi Settings:** You can add up to three WiFi networks. The software automatically selects the strongest available network, such as your home network or a mobile hotspot.
+
+- **Callsign:** Change this to your unique callsign to be displayed on Sondehub.
+
+- **Station Location (UPL_LAT, UPL_LON, UPL_ALT):** Set these to your current location. These coordinates are used if the software cannot obtain a valid GPS fix.
+
+- **UPLOAD_YOUR_POSITION:** If set to `true`, the software periodically uploads your receiver's position to Sondehub.
+
+- **UPLOAD_PAYLOAD_PACKET:** If set to `true`, the software uploads received telemetry to Sondehub.
+
+- **LoRa Settings:** Configure the frequency and LoRa mode (Mode 2 is currently the most thoroughly tested).
+
+## Memory & Compilation Issues
+
+Because this sketch offers extensive functionality, it may not compile on some older boards due to memory limitations in the default Arduino IDE partitioning.
+
+**Recommended Compilation Settings:**
+
+- Identify the MCU on your board and select the corresponding **"DEV" board** in the IDE (e.g., "ESP32S3 Dev Module").
+
+- In the board options, set the **Partition Scheme** to **"Huge APP"**.
+
+- Ensure you map the correct pin numbers for your specific board in `settings.h`.
+
+## Compile and Run
+
+1. Compile and upload the sketch to your board.
+
+2. Use the **Serial Monitor (115200 baud)** to monitor the software.
+
+3. The device will attempt to connect to your specified WiFi and display the assigned IP address. This IP will also appear on the OLED display if one is installed.
+
+## Using the Web Interface
+
+Enter the device's IP address into a web browser to access the interface. From here, you can:
+
+- Change the RX frequency.
+
+- Toggle telemetry uploads to Sondehub.
+
+- View chasing directions; the main page auto-reloads every 20 seconds to show you which way to go to find your balloon.
+
+---
+
+## Versions
+
+### V0.1.1
+
+- **20-Apr-2026:** Added a frequency offset macro for specific RF chip deviations.
+
+- **20-Apr-2026:** Made AFC flexible; the radio adjusts to the balloon frequency for 1-3 minutes before reverting.
+
+- **18-Apr-2026:** Added a GPS communication check.
+
+- **18-Apr-2026:** Added manual SPI parameter settings in `settings.h` to support "ESP32 DEV" boards on older T-Beams.
+
+- **12-Apr-2026:** Replaced webserver and TCP libraries with `ESP32Async` versions.
+
+- **12-Apr-2026:** Disabled Bluetooth on compatible boards to save resources.
+
+### v0.0.13
+
+- **20-Feb-2026:** Updated code to maintain compatibility with all libraries.
+
+### v0.0.12
+
+- **15-May-2024:** Added a manual position upload button to the web interface.
+
+- **14-May-2024:** Resolved a bug regarding the 30-minute position upload interval.
+
+### v0.0.11
+
+- **28-Jul-2023:** Added support for the APX power management chip (found in T-BEAM v1.1 and v1.2).
+
+- **29-Jun-2023:** Verified compatibility with Radiolib 6.0.1.
+
+- **28-Jun-2023:** Fixed incorrect LoRa mode text in uploads and added a GPS debugging option.
+
+### v0.0.10
+
+- **24-May-2023:** Re-enabled OLED Flash and Flash Pin on packet reception.
+
+- **22-May-2023:** Updated for RadioLib 6.0.0 and optimized radio listening uptime.
+
+### v0.0.9
+
+- **07-Apr-2023:** Temporarily disabled certain OLED/Pin flashing features.
+
+- **20-Mar-2023:** Migrated uploading to a background thread and queue system.
+
+- **15-Mar-2023:** Added support for SSDV.
+
+- **03-Mar-2023:** Updated Serial port baud rate to 115200.
+
+### v0.0.8
+
+- **24-Feb-2023:** Added support for a "FLASH PIN" (HIGH for 300ms upon packet receipt).
+
+- **23-Feb-2023:** Added multiple OLED visual modes (Default, All, Chase).
+
+### v0.0.7
+
+- **03-Feb-2023:** Enabled functionality without WiFi (Serial/OLED only) and updated web links.
+
+### v0.0.6
+
+- **29-Jan-2023:** Added an APRS packet parser for all interfaces.
+
+### v0.0.5
+
+- **21-Jan-2023:** Added LoRa-APRS support and a packet log trail in the web interface.
+
+- **21-Jan-2023:** Improved packet validation and Serial monitor readability.
+
+### v0.0.4
+
+- **20-Jan-2023:** Added radio autotune based on calculated frequency error.
+
+- **20-Jan-2023:** Added support for LoRa Modes 0 and 1; enabled mode switching via web interface.
+
+- **14-Jan-2023:** Added support for LoRa Modes 3 and 5.
+
+### v0.0.3
+
+- **06-Jan-2023:** Added SNR, RSSI, and "time since last packet" to the web interface.
+
+### v0.0.2
+
+- **23-Dec-2022:** Added upload results to the web interface and improved packet identification.
+
+### v0.0.1
+
+- **19-Dec-2022:** Initial versioned release; added frequency updates to OLED and web-based DEVFLAG toggling.
+
+---
+
+## Work in Progress
+
+This software is a work in progress, originally created to track my own balloons. It is provided "as-is" without any guarantees. If you find it useful, please let me know—and most importantly, have fun!
 
 Roel.
-
-![TBTracker-RX-001](https://user-images.githubusercontent.com/58561387/208243067-bfdd5e9e-8f6b-4190-9626-1636de4a8068.png)
-![TBTracker-RX-002](https://user-images.githubusercontent.com/58561387/208243079-900dfd50-ce42-46ea-b731-e743e1de91d0.png)
-![TBTracker-RX-003](https://user-images.githubusercontent.com/58561387/208243093-8fb9749e-5dee-47d9-8347-a0649a3a4bc4.png)
-![tb-tracker_v003](https://user-images.githubusercontent.com/58561387/211216791-2b8a34f7-5c6b-442a-bf04-dfc4209e8bcd.png)
-

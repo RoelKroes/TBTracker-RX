@@ -14,7 +14,7 @@ WiFiMulti WiFiMulti;
 ************************************************************************************/
 void setupWifi()
 {
-    Serial.println(); Serial.println();
+    toSerialConsole(F("\n\n"));
 
 #if defined(USE_SSD1306)
     displayClear();
@@ -30,33 +30,33 @@ void setupWifi()
     if (WIFI_SSID_3 != "") WiFiMulti.addAP(WIFI_SSID_3, WIFI_PASSWORD_3);
 
     // WiFi network Scan
-    Serial.print("[WiFi] Scanning WiFi networks...");
+    toSerialConsole(F("[WiFi] Scanning WiFi networks..."));
     // WiFi.scanNetworks will return the number of networks found
     int n = WiFi.scanNetworks();
-    Serial.println("scan done.");
+    toSerialConsole(F("scan done.\n"));
      if (n == 0) 
      {
-      Serial.println("no networks found");
+      toSerialConsole(F("no networks found\n"));
      } 
      else 
      {
-      Serial.print(n); Serial.println(" networks found");
+      toSerialConsole(n); toSerialConsole(F(" networks found\n"));
       for (int i = 0; i < n; ++i) 
       {
         // Print SSID and RSSI for each network found
-        Serial.print(i + 1);
-        Serial.print(": ");
-        Serial.print(WiFi.SSID(i));
-        Serial.print(" (");
-        Serial.print(WiFi.RSSI(i));
-        Serial.print(")");
-        Serial.println((WiFi.encryptionType(i) == WIFI_AUTH_OPEN)?" ":"*");
+        toSerialConsole(i + 1);
+        toSerialConsole(": ");
+        toSerialConsole(WiFi.SSID(i));
+        toSerialConsole(" (");
+        toSerialConsole(WiFi.RSSI(i));
+        toSerialConsole(")");
+        toSerialConsole((WiFi.encryptionType(i) == WIFI_AUTH_OPEN)?" \n":"*\n");
         delay(10);
       }
     }
 
     // Try to connect to the stongest know access point
-    Serial.print(F("[WiFi} Connecting to WiFi, please wait."));
+    toSerialConsole(F("[WiFi} Connecting to WiFi, please wait."));
 #if defined(USE_SSD1306)
     displayClear();
     displayOled(0,0,"Connecting to WiFi...");
@@ -65,22 +65,21 @@ void setupWifi()
     while (WiFiMulti.run() != WL_CONNECTED && loopCounter < 25) 
     {
       delay(500);
-      Serial.print(".");
+      toSerialConsole(F("."));
       loopCounter++;
     }
     
     if (WiFi.status() == WL_CONNECTED)
     {
-       Serial.println("");
-       Serial.print(F("[WiFi} WiFi connected to: ")); Serial.println(WiFi.SSID()); 
-       Serial.print(F("[WiFi} IP address: ")); Serial.println(WiFi.localIP());
+       toSerialConsole(F("\n"));
+       toSerialConsole(F("[WiFi} WiFi connected to: ")); toSerialConsole(WiFi.SSID()); toSerialConsole(F("\n"));
+       toSerialConsole(F("[WiFi} IP address: ")); toSerialConsole(WiFi.localIP().toString()); toSerialConsole(F("\n"));
        WiFi.setAutoReconnect(true);
        WiFi.persistent(true);
     }
     else
     {
-      Serial.println();
-      Serial.println(F("Could not connect to WiFi. No uploading possible."));
+      toSerialConsole(F("\nCould not connect to WiFi. No uploading possible."));
     }
 }
 
@@ -93,7 +92,7 @@ void formatLocalTime()
   
   if(!getLocalTime(&timeinfo))
   {
-    Serial.println(F("Failed to obtain time"));
+    toSerialConsole(F("Failed to obtain time\n"));
     return;
   }
   strftime(Telemetry.time_received,sizeof(Telemetry.time_received),"%Y-%m-%dT%T.000000Z",&timeinfo);

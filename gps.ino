@@ -28,7 +28,7 @@ static void smartDelay(unsigned long ms)
     gps_valid = false;
 
 #if defined(GPS_DEBUG)
-  Serial.println(gps.charsProcessed() + (String)" GPS chars read, " + gps.passedChecksum() + " valid GPS sentances, " + gps.satellites.value() + " GPS sats.");
+  toSerialConsole(gps.charsProcessed() + (String)" GPS chars read, " + gps.passedChecksum() + " valid GPS sentances, " + gps.satellites.value() + " GPS sats.\n");
 #endif
 }
 
@@ -124,3 +124,24 @@ String degToCompass(int num)
   const char *arr[] = {"N","NNE","NE","ENE","E","ESE", "SE", "SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"};
   return String(arr[(val % 16)]);
 }
+
+
+//============================================================================
+// Check the communication with the GPS
+//============================================================================
+static void GPSCommTest(unsigned long ms)
+{
+#if defined(ALLOWDEBUG)
+  unsigned long start = millis();
+  toSerialConsole(F("---START GPS COMMUNICATION CHECK---\n"));
+  toSerialConsole(F("-----------------------------------\n"));
+  do 
+  {
+    if (Serial2.available())
+       Serial.write(Serial2.read());
+  } while (millis() - start < ms);
+  toSerialConsole(F("-----------------------------------\n"));
+  toSerialConsole(F("----END GPS COMMUNICATION CHECK----\n\n"));
+#endif
+}
+

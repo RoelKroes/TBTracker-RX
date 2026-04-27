@@ -88,24 +88,22 @@ void postStationToServer()
 
     // Use the lines below for debugging. Be sure that the total length of the JSON
     // doen NOT exceed 350
-    // Serial.println(); Serial.print("JSON length: "); Serial.println(json.length());
-    // Serial.println(json);
+    // toSerialConsole("\nJSON length: "); toSerialConsole(json.length()); toSerialConsole("\n");
+    // toSerialConsole(json); toSerialConsole("\n");
     
-    Serial.println();     
-    Serial.println();
-    Serial.println(F("Uploading your position to Sondehub:"));
+    toSerialConsole(F("\n\nUploading your position to Sondehub:\n"));
     int httpResponseCode = https.PUT(json);
     
     // Display the result of the JSON upload 
     if(httpResponseCode>0)
     {   
       String response = https.getString();                       
-      Serial.print(httpResponseCode); Serial.print(F(" - ")); Serial.println(response); 
+      toSerialConsole(httpResponseCode); toSerialConsole(F(" - ")); toSerialConsole(response); toSerialConsole(F("\n"));
     }
     else 
     { 
-      Serial.printf("Error code: %d\n",httpResponseCode);
-      Serial.printf("Error occurred while sending HTTP POST: %s\n", https.errorToString(httpResponseCode).c_str());  
+      toSerialConsole(F("Error code: ")); toSerialConsole(httpResponseCode); toSerialConsole(F("\n"));
+      toSerialConsole(F("Error occurred while sending HTTP POST: ")); toSerialConsole(https.errorToString(httpResponseCode).c_str()); toSerialConsole(F("\n"));
     }
 
     https.end();
@@ -153,16 +151,15 @@ void postSSDVToServer()
     
       String json;
       serializeJson(doc, json);
-      Serial.println();
-      Serial.print(F("JSON length SSDV: ")); Serial.println(json.length());
+      toSerialConsole(F("\nJSON length SSDV: ")); toSerialConsole(json.length()); toSerialConsole(F("\n"));
       
       int httpResponseCode = https.POST(json);
     
       // Print the results to the Serial console
       if(httpResponseCode <= 0)
       {
-        Serial.printf("Error code: %d\n",httpResponseCode);
-        Serial.printf("Error occurred while sending HTTP POST: %s\n", https.errorToString(httpResponseCode).c_str());  
+        toSerialConsole(F("Error code: ")); toSerialConsole(httpResponseCode); toSerialConsole(F("\n"));
+        toSerialConsole(F("Error occurred while sending HTTP POST: ")); toSerialConsole(https.errorToString(httpResponseCode).c_str()); toSerialConsole(F("\n"));
       }
       // cleanup
       https.end();
@@ -269,8 +266,7 @@ void postTelemetryToServer()
       https.addHeader("accept", "text/plain");
       
       json = jbuf;
-      Serial.println();
-      Serial.print(F("JSON length: ")); Serial.println(json.length());
+      toSerialConsole(F("\nJSON length: ")); toSerialConsole(json.length()); toSerialConsole(F("\n"));
 
       int httpResponseCode = https.PUT(json);
     
@@ -279,15 +275,15 @@ void postTelemetryToServer()
       {
        
         String response = https.getString();                       
-        Serial.print("\nUpload result: ");
-        Serial.print(httpResponseCode); Serial.print(" - ");
-        Serial.println(response); 
+        toSerialConsole(F("\nUpload result: "));
+        toSerialConsole(httpResponseCode); toSerialConsole(F(" - "));
+        toSerialConsole(response); toSerialConsole(F("\n"));
         // Telemetry.uploadResult =  response;
       }
       else 
       {   
-        Serial.printf("Error code: %d\n",httpResponseCode);
-        Serial.printf("Error occurred while sending HTTP POST: %s\n", https.errorToString(httpResponseCode).c_str());  
+        toSerialConsole(F("Error code: ")); toSerialConsole(httpResponseCode); toSerialConsole(F("\n"));
+        toSerialConsole(F("Error occurred while sending HTTP POST: ")); toSerialConsole(https.errorToString(httpResponseCode).c_str()); toSerialConsole(F("\n"));
         // Telemetry.uploadResult = https.errorToString(httpResponseCode);
       }
       https.end();

@@ -43,12 +43,12 @@ void XPowerInit()
         PMU = new XPowersAXP2101(Wire, i2c_sda, i2c_scl);
         if (!PMU->init()) 
         {
-            Serial.printf("Did not find AXP2101 power management\n");
+            toSerialConsole(F("Did not find AXP2101 power management\n"));
             delete PMU;
             PMU = NULL;
         } else 
         {
-            Serial.printf("AXP2101 PMU init succeeded, using AXP2101 PMU\n\n");
+            toSerialConsole(F("AXP2101 PMU init succeeded, using AXP2101 PMU\n\n"));
         }
     }
 
@@ -58,12 +58,12 @@ void XPowerInit()
         PMU = new XPowersAXP192(Wire, i2c_sda, i2c_scl);
         if (!PMU->init()) 
         {
-            Serial.printf("Did not find AXP192 power management\n");
+            toSerialConsole(F("Did not find AXP192 power management\n"));
             delete PMU;
             PMU = NULL;
         } else 
         {
-            Serial.printf("AXP192 PMU init succeeded, using AXP192 PMU\n\n");
+            toSerialConsole(F("AXP192 PMU init succeeded, using AXP192 PMU\n\n"));
         }
     }
    
@@ -73,19 +73,19 @@ void XPowerInit()
         PMU = new XPowersAXP202(Wire, i2c_sda, i2c_scl);
         if (!PMU->init()) 
         {
-            Serial.printf("Did not find AXP202 power management\n");
+            toSerialConsole(F("Did not find AXP202 power management\n"));
             delete PMU;
             PMU = NULL;
         } else 
         {
-            Serial.printf("AXP202 PMU init succeeded, using AXP202 PMU\n\n");
+            toSerialConsole(F("AXP202 PMU init succeeded, using AXP202 PMU\n\n"));
         }
     }
 
     // No supported PMU detected 
     if (!PMU) 
     {
-        Serial.println("Continuing without APX support, which is no problem...\n\n"); 
+        toSerialConsole(F("Continuing without APX support, which is no problem...\n\n")); 
     }
     else
     {
@@ -238,16 +238,16 @@ void XPowerInit()
       // Set the time of pressing the button to turn off
       PMU->setPowerKeyPressOffTime(XPOWERS_POWEROFF_4S);
       uint8_t opt = PMU->getPowerKeyPressOffTime();
-      Serial.print("PowerKeyPressOffTime:");
+      toSerialConsole(F("PowerKeyPressOffTime:"));
       switch (opt) 
       {
-        case XPOWERS_POWEROFF_4S: Serial.println("4 Second");
+        case XPOWERS_POWEROFF_4S: toSerialConsole(F("4 Second\n"));
         break;
-        case XPOWERS_POWEROFF_6S: Serial.println("6 Second");
+        case XPOWERS_POWEROFF_6S: toSerialConsole(F("6 Second\n"));
         break;
-        case XPOWERS_POWEROFF_8S: Serial.println("8 Second");
+        case XPOWERS_POWEROFF_8S: toSerialConsole(F("8 Second\n"));
         break;
-        case XPOWERS_POWEROFF_10S: Serial.println("10 Second");
+        case XPOWERS_POWEROFF_10S: toSerialConsole(F("10 Second\n"));
         break;
         default:
         break;
@@ -256,22 +256,22 @@ void XPowerInit()
       // Set the button power-on press time
       PMU->setPowerKeyPressOnTime(XPOWERS_POWERON_128MS);
       opt = PMU->getPowerKeyPressOnTime();
-      Serial.print("PowerKeyPressOnTime:");
+      toSerialConsole(F("PowerKeyPressOnTime:"));
       switch (opt) 
       {
-        case XPOWERS_POWERON_128MS: Serial.println("128 Ms");
+        case XPOWERS_POWERON_128MS: toSerialConsole(F("128 Ms\n"));
         break;
-        case XPOWERS_POWERON_512MS: Serial.println("512 Ms");
+        case XPOWERS_POWERON_512MS: toSerialConsole(F("512 Ms\n"));
         break;
-        case XPOWERS_POWERON_1S: Serial.println("1 Second");
+        case XPOWERS_POWERON_1S: toSerialConsole(F("1 Second\n"));
         break;
-        case XPOWERS_POWERON_2S: Serial.println("2 Second");
+        case XPOWERS_POWERON_2S: toSerialConsole(F("2 Second\n"));
         break;
         default:
         break;
       }
 
-      Serial.println("===========================================================================");
+      toSerialConsole(F("===========================================================================\n"));
 
        // It is necessary to disable the detection function of the TS pin on the board
        // without the battery temperature detection function, otherwise it will cause abnormal charging
